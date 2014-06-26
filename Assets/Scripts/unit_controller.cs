@@ -1,0 +1,73 @@
+﻿
+using UnityEngine;
+using System.Collections;
+// PizzaNode Playercontroller.cs
+
+public class unit_controller : MonoBehaviour {
+
+	public int speed = 5;
+	public Vector2 maxVelocity = new Vector3(1000,1000);
+	public float ply_rot_speed = 1.0f;
+
+	private float xAxisValue;
+	private float yAxisValue;
+	
+	private KeyCode keys_camera = KeyCode.C;
+	private KeyCode keys_fire = KeyCode.Z;
+
+	private Vector3 euler_rot; // use to calculate player rotation
+	private Vector2 player_control; // Player control input
+
+	// Use this for initialization
+	void Start () {
+	
+	}
+	
+	// Update is called once per frame
+	void Update () {
+	
+		#region Handle Player Input
+		// Sample axes
+		xAxisValue = Input.GetAxis("Horizontal");
+		yAxisValue = Input.GetAxis("Vertical");
+
+		// move the player
+		// Linear 1-1 control
+		//transform.Translate(xAxisValue * speed * Time.deltaTime, yAxisValue * speed * Time.deltaTime, 0);
+
+		// force-based control
+		player_control = new Vector2(xAxisValue * speed * Time.deltaTime, yAxisValue * speed * Time.deltaTime);
+		gameObject.rigidbody2D.AddForce(player_control);
+
+		// Clamp velocity values
+		if (transform.rigidbody2D.velocity.x > maxVelocity.x)
+			transform.rigidbody2D.velocity.Set(maxVelocity.x, transform.rigidbody2D.velocity.y);
+		else if (transform.rigidbody2D.velocity.x < -maxVelocity.x)
+			transform.rigidbody2D.velocity.Set(-maxVelocity.x, transform.rigidbody2D.velocity.y);
+		
+		if (transform.rigidbody2D.velocity.y > maxVelocity.y)
+			transform.rigidbody2D.velocity.Set(transform.rigidbody2D.velocity.x, maxVelocity.y);
+		else if (transform.rigidbody2D.velocity.y < -maxVelocity.y)
+			transform.rigidbody2D.velocity.Set(transform.rigidbody2D.velocity.x,-maxVelocity.y);
+
+
+		if (Input.GetKey(keys_camera))
+		{
+			// Change camera mode with C
+			GameObject.Find("Camera_Controller").SendMessage ("ChangeCameraMode");
+		}
+		else if (Input.GetKey(keys_fire))
+		{
+			// i'm firin mah lazer
+			//FireLaser();
+		}
+		#endregion
+
+		#region Animate Player
+		// Rotate at speed
+		euler_rot = new Vector3 (0,0,ply_rot_speed);
+		transform.Rotate(euler_rot);
+
+		#endregion
+	}
+}
