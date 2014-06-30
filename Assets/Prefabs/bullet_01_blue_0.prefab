@@ -13,6 +13,7 @@ GameObject:
   - 114: {fileID: 11400000}
   - 50: {fileID: 5000000}
   - 58: {fileID: 5800000}
+  - 114: {fileID: 11400002}
   m_Layer: 0
   m_Name: bullet_01_blue_0
   m_TagString: Bullet
@@ -79,9 +80,29 @@ MonoBehaviour:
   m_GameObject: {fileID: 100000}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ca7da981326574149af6ceaf2afdd3cf, type: 3}
+  m_Script: {fileID: 11500000, guid: e4dd46728d2144fecbef1bead9bedec9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  anim_start_time: 0
+  anim_desired_time: 0
+  damage: 1
+  life_span: 10
+  EnemyShot: 0
+--- !u!114 &11400002
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a156a793c51304d909dd9486d2c60326, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target_stored_position: {x: 0, y: 0, z: 0}
+  directionOfTravel: {x: 0, y: 0, z: 0}
+  speed: 2
+  selected: {fileID: 0}
 --- !u!212 &21200000
 SpriteRenderer:
   m_ObjectHideFlags: 1

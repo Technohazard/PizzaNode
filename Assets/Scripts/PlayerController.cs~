@@ -18,12 +18,14 @@ public class unit_controller : MonoBehaviour {
 
 	private Vector3 euler_rot; // use to calculate player rotation
 
-
+	private Component[] weapons; // list of player weapon components;
 
 	private Vector2 player_control;
 	// Use this for initialization
 	void Start () {
 	
+		weapons = GetComponentsInChildren<weapon_01>();
+		
 	}
 	
 	// Update is called once per frame
@@ -53,19 +55,25 @@ public class unit_controller : MonoBehaviour {
 		else if (transform.rigidbody2D.velocity.y < -maxVelocity.y)
 			transform.rigidbody2D.velocity.Set(transform.rigidbody2D.velocity.x,-maxVelocity.y);
 
-
+		// Change the camera mode 
 		if (Input.GetKey(keys_camera))
 		{
 			// Change camera mode with C
 			GameObject.Find("Camera_Controller").SendMessage ("ChangeCameraMode");
 		}
+		
 		else if (Input.GetKey(keys_fire))
 		{
 			// i'm firin mah lazer
-			//FireLaser();
+			player_fire();
 		}
 
-
+		// Fire a bullet if the player hits the fire button
+		if (Input.GetButtonDown("Fire1")) 
+		{
+	        player_fire();
+	        Debug.Log("BLAM!!");
+	    }
 
 		#endregion
 
@@ -75,5 +83,14 @@ public class unit_controller : MonoBehaviour {
 		transform.Rotate(euler_rot);
 
 		#endregion
+	}
+	
+	void player_fire()
+	{
+		// gets a list of all player child weapon scripts and calls Fire method on each
+		foreach (gameObject wpn in weapons)
+		{
+			wpn.Fire();
+		}
 	}
 }

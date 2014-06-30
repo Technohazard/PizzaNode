@@ -18,9 +18,13 @@ public class unit_controller : MonoBehaviour {
 	private Vector3 euler_rot; // use to calculate player rotation
 	private Vector2 player_control; // Player control input
 
+	private weapon_01[] weapons; // list of player weapon components;
+
 	// Use this for initialization
 	void Start () {
 	
+		weapons = GetComponentsInChildren<weapon_01>();
+
 	}
 	
 	// Update is called once per frame
@@ -61,6 +65,15 @@ public class unit_controller : MonoBehaviour {
 			// i'm firin mah lazer
 			//FireLaser();
 		}
+
+		// Fire a bullet if the player hits the fire button
+		if (Input.GetButtonDown("Fire1")) 
+		{
+			player_fire();
+			Debug.Log("BLAM!!");
+		}
+
+
 		#endregion
 
 		#region Animate Player
@@ -70,4 +83,14 @@ public class unit_controller : MonoBehaviour {
 
 		#endregion
 	}
+
+	void player_fire()
+	{
+		// gets a list of all player child weapon scripts and calls Fire method on each
+		foreach (weapon_01 wpn in weapons)
+		{
+			wpn.Fire();
+		}
+	}
+
 }

@@ -5,9 +5,14 @@ public class player_target : MonoBehaviour {
 
 	public Vector3 target_stored_position = new Vector3(0,0,0);
 
-	// Use this for initialization
+	public GameObject selected;
+
+	//the speed, in units per second, we want to move towards the target
+	public float speed = 10.0f;
+	
 	void Start () {
 		Camera.main.ScreenToWorldPoint(Input.mousePosition);
+		target_stored_position = gameObject.transform.position;
 	}
 	
 	// Update is called once per frame
@@ -16,37 +21,43 @@ public class player_target : MonoBehaviour {
 
 		if(hit.collider != null)
 		{
-			Debug.Log ("Target Name: " + hit.collider.gameObject.name);
-			Debug.Log ("Target Position: " + hit.collider.gameObject.transform.position);
+			selected = hit.collider.gameObject;
+			Debug.Log ("Target Name: " + selected.name);
+			Debug.Log ("Target Position: " + selected.transform.position);
+		
+			SetTarget(hit.collider.gameObject.transform.position);
 		}
 
-		MoveTowardsTarget(hit.collider.gameObject.transform.position);
+		MoveTowardsTarget();
 	}
 
-	private void MoveTowardsTarget(Vector3 targetPosition) {
-		//the speed, in units per second, we want to move towards the target
-		float speed = 1;
-		
+	void SetTarget(Vector3 targetPosition)
+	{
+		// sets the pointer's target
 		if (targetPosition != target_stored_position)
 		{
 			target_stored_position = targetPosition;
 		}
-		
-		//move towards the center of the world (or where ever you like)
-		
-		Vector3 currentPosition = this.transform.position;
+	}
+
+	void MoveTowardsTarget() {
+
+
+		Vector3 currentPosition = transform.position;
+
 		//first, check to see if we're close enough to the target
-		if(Vector3.Distance(currentPosition, targetPosition) > .1f) { 
-			Vector3 directionOfTravel = targetPosition - currentPosition;
+		if(Vector3.Distance(currentPosition, target_stored_position) > .1f) { 
+			Vector3 directionOfTravel = target_stored_position - currentPosition;
 			//now normalize the direction, since we only want the direction information
 			directionOfTravel.Normalize();
 			//scale the movement on each axis by the directionOfTravel vector components
 			
-			this.transform.Translate(
+			transform.Translate(
 				(directionOfTravel.x * speed * Time.deltaTime),
 				(directionOfTravel.y * speed * Time.deltaTime),
-				(directionOfTravel.z * speed * Time.deltaTime),
-				Space.World);
+				(directionOfTravel.z * speed * Time.deltaTime));
+
+			// Space.World
 		}	
 	}
 }

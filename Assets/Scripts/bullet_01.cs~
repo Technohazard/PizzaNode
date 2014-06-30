@@ -12,8 +12,8 @@ public class bullet_01 : MonoBehaviour {
 	// Animation Variables
 	private Animator my_anim;
 
-	public float start_time = 0.0F;
-	public float desired_time;
+	public float anim_start_time = 0.0F;
+	public float anim_desired_time;
 
 	public int damage = 1;
 	public float life_span = 20f; // Destroy this object after X seconds
@@ -23,7 +23,7 @@ public class bullet_01 : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		my_anim = this.transform.GetComponent<Animator>();
-		desired_time = start_time;
+		anim_desired_time = anim_start_time;
 
 		my_anim.StopPlayback();
 
@@ -45,15 +45,15 @@ public class bullet_01 : MonoBehaviour {
 			// Left
 			if(velocity.y < 0)
 			{
-				desired_time = 6; // LD
+				anim_desired_time = 6; // LD
 			}
 			else if (velocity.y == 0)
 			{
-				desired_time = 3; // LL
+				anim_desired_time = 3; // LL
 			}
 			else if (velocity.y > 0)
 			{
-				desired_time = 0; // LU
+				anim_desired_time = 0; // LU
 			}
 		}
 		else if (velocity.x > 0)
@@ -61,15 +61,15 @@ public class bullet_01 : MonoBehaviour {
 			// Right
 			if(velocity.y < 0)
 			{
-				desired_time = 8; // RD
+				anim_desired_time = 8; // RD
 			}
 			else if (velocity.y == 0)
 			{
-				desired_time = 5; // RR
+				anim_desired_time = 5; // RR
 			}
 			else if (velocity.y > 0)
 			{
-				desired_time = 5; // RU
+				anim_desired_time = 5; // RU
 			}
 		}
 		else if (velocity.x == 0)
@@ -77,20 +77,20 @@ public class bullet_01 : MonoBehaviour {
 			// Vertical
 			if(velocity.y < 0)
 			{
-				desired_time = 7; // DD
+				anim_desired_time = 7; // DD
 			}
 			else if (velocity.y == 0)
 			{
-				desired_time = 4; // Not Moving
+				anim_desired_time = 4; // Not Moving
 			}
 			else if (velocity.y > 0)
 			{
-				desired_time = 1; // UU
+				anim_desired_time = 1; // UU
 			}
 		}
 		#endregion
 
-		//my_anim.playbackTime = desired_time; //set your frame to where you want (float)
+		//my_anim.playbackTime = anim_desired_time; //set your frame to where you want (float)
 		//my_anim.StartPlayback();
 	}
 

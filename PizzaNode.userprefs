@@ -6,7 +6,7 @@
         <State expanded="True">
           <Node name="Assembly-CSharp" expanded="True">
             <Node name="Scripts" expanded="True">
-              <Node name="health_script.cs" selected="True" />
+              <Node name="player_target.cs" selected="True" />
             </Node>
           </Node>
         </State>
