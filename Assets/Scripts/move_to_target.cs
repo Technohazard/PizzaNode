@@ -6,12 +6,12 @@ public class move_to_target : MonoBehaviour {
 	public Vector3 target_stored_position = new Vector3(0,0,0);
 	public Vector3 directionOfTravel = Vector3.zero; // always starts inert
 
-	enum movement_type {dumb, target, seeker};
+	public enum movement_type {dumb, target, seeker};
 	// dumb = pick a direction at start and move in that direction until collide / death
 	// target = check to see if bullet has reached target - explode when there!
 	// seeker = continually update target position and seek it
 
-	movement_type bullet_movement = movement_type.dumb; // defaults to dumb
+	public movement_type bullet_movement = movement_type.dumb; // defaults to dumb
 
 	public float speed = 10.0f;
 	public GameObject selected;
@@ -111,7 +111,13 @@ public class move_to_target : MonoBehaviour {
 				(directionOfTravel.z * speed * Time.deltaTime));
 			
 			// Space.World
-		}	
+		}
+		else
+		{
+			// arrived at target!
+			ArriveAtTarget();
+		}
+
 	}
 
 	void MoveSeekTarget()
@@ -141,12 +147,10 @@ public class move_to_target : MonoBehaviour {
 		}
 	}
 
-	void Explode()
+	void ArriveAtTarget()
 	{
-		// eventually this will play an explosion animation, but for now, just destroy the bullet.
 		// ex: if (animation exists) { switch to play animation; destroy after animation length;}
-
-		Destroy (gameObject);
+		gameObject.GetComponent<bullet_01>().impact();
 	}
 
 	void getDirectionToTarget()

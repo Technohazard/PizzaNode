@@ -80,14 +80,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 100000}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b04dce9dcf90243b5b21d3d294513f4e, type: 3}
+  m_Script: {fileID: 11500000, guid: a156a793c51304d909dd9486d2c60326, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  start_speed: {x: 2, y: 0}
-  start_direction: {x: -1, y: 0}
-  isLinkedToCamera: 0
-  offset_mode: 0
-  isLooping: 0
+  target_stored_position: {x: 0, y: 0, z: 0}
+  directionOfTravel: {x: 0, y: 0, z: 0}
+  bullet_movement: 0
+  speed: 5
+  selected: {fileID: 100000, guid: 345c88a8de24c444285ac84eec9700f1, type: 2}
 --- !u!114 &11400002
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -103,7 +103,9 @@ MonoBehaviour:
   anim_desired_time: 0
   damage: 1
   life_span: 10
-  EnemyShot: 0
+  EnemyShot: 1
+  explode_length: .100000001
+  bullet_type: 0
 --- !u!212 &21200000
 SpriteRenderer:
   m_ObjectHideFlags: 1

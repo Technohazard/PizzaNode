@@ -10,10 +10,10 @@ GameObject:
   - 4: {fileID: 400000}
   - 212: {fileID: 21200000}
   - 95: {fileID: 9500000}
-  - 114: {fileID: 11400000}
   - 50: {fileID: 5000000}
   - 61: {fileID: 6100000}
   - 114: {fileID: 11400002}
+  - 114: {fileID: 11400000}
   m_Layer: 0
   m_Name: beacon_search_0
   m_TagString: Enemy
@@ -83,11 +83,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a522953074370d94bbd17984dc7d8b61, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  beacon_health: 2
-  max_health: 2
-  damage_limit: .5
-  beacon_alerted: 0
-  beacon_damaged: 0
+  damage_limit: .100000001
+  alerted: 0
+  damaged: 0
 --- !u!114 &11400002
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -99,9 +97,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3541405d6542b4cadba48fcc732e3474, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  hp: 2
-  max_hp: 2
-  isEnemy: 0
+  hp: 10
+  max_hp: 10
+  shield_max: 0
+  shield: 0
+  s_charge_rate: 0
+  s_charge_time: 0
+  isEnemy: 1
 --- !u!212 &21200000
 SpriteRenderer:
   m_ObjectHideFlags: 1

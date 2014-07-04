@@ -48,16 +48,19 @@
   <ItemGroup>
      <Compile Include="Assets\Scripts\Camera_Controller.cs" />
      <Compile Include="Assets\Scripts\RendererExtensions.cs" />
+     <Compile Include="Assets\Scripts\Unit_Satellite.cs" />
+     <Compile Include="Assets\Scripts\beacon_sensor.cs" />
      <Compile Include="Assets\Scripts\bullet_01.cs" />
      <Compile Include="Assets\Scripts\carrot_ship.cs" />
      <Compile Include="Assets\Scripts\enemy_beacon.cs" />
+     <Compile Include="Assets\Scripts\enemy_pilot.cs" />
      <Compile Include="Assets\Scripts\health_script.cs" />
      <Compile Include="Assets\Scripts\move_to_target.cs" />
      <Compile Include="Assets\Scripts\player_target.cs" />
      <Compile Include="Assets\Scripts\scrolling_script.cs" />
+     <Compile Include="Assets\Scripts\texture_scroller.cs" />
      <Compile Include="Assets\Scripts\unit_controller.cs" />
      <Compile Include="Assets\Scripts\weapon_01.cs" />
-     <Compile Include="Assets\enemy_pilot.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

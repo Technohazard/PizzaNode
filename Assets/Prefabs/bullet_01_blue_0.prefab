@@ -88,6 +88,8 @@ MonoBehaviour:
   damage: 1
   life_span: 10
   EnemyShot: 0
+  explode_length: .100000001
+  bullet_type: 0
 --- !u!114 &11400002
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -101,7 +103,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   target_stored_position: {x: 0, y: 0, z: 0}
   directionOfTravel: {x: 0, y: 0, z: 0}
-  speed: 2
+  bullet_movement: 0
+  speed: 5
   selected: {fileID: 0}
 --- !u!212 &21200000
 SpriteRenderer:

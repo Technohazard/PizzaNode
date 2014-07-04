@@ -12,9 +12,11 @@ public class weapon_01 : MonoBehaviour {
 	public float charge_time = 1.0f; // number of seconds before charge_rate updates
 	public float cost_per_bullet = 20.0f; // weapon energy spent everytime a bullet fires
 
+	public bool ready; // if weapon has enough charge to fire, set this to true
+
 	private float timer = 0.0f; // internal timer for charging
 
-	private GameObject target_ref; // reference to player target 
+	public GameObject target_ref; // reference to target 
 	
 	// Use this for initialization
 	void Start () 
@@ -26,18 +28,48 @@ public class weapon_01 : MonoBehaviour {
 		}
 
 		// Locate the player target and get a reference to it
-		target_ref = GameObject.Find("player_target");
-
-		if (target_ref == null)
+		if (transform.parent.tag == "Enemy")
+		{
+			target_ref = gameObject.transform.parent.GetComponent<enemy_pilot>().target;
+		}
+		else if (transform.parent.tag == "Player")
+		{
+			target_ref = GameObject.Find("player_target");
+			
+			if (target_ref == null)
+			{
+				Debug.Log("Couldn't find player target to link to weapon firing script!");
+			}
+		}
+		else
 		{
 			Debug.Log("Couldn't find player target to link to weapon firing script!");
 		}
+
 	}
 	
 	// Update is called once per frame
 	void Update () 
 	{
+		re_target();
 		update_charge_timer();
+	}
+
+	void re_target()
+	{
+		if (transform.parent.tag == "Enemy")
+		{
+			target_ref = gameObject.transform.parent.GetComponent<enemy_pilot>().target;
+		}
+		else
+		{
+			target_ref = GameObject.Find("player_target");
+			
+			if (target_ref == null)
+			{
+				Debug.Log("Couldn't find player target to link to weapon firing script!");
+			}
+		}
 	}
 
 	public void Fire()
@@ -52,10 +84,23 @@ public class weapon_01 : MonoBehaviour {
 	
 			temp_bullet = (GameObject)Instantiate(bullet_type, transform.position, Quaternion.identity);
 
-			// Set the bullet's target to the current playertarget
-			temp_bullet.GetComponent<move_to_target>().SetTarget(target_ref.transform.position);
+			// check to see whether fired by enemy or player
+			if (transform.parent.tag == "Enemy")
+			{
+				temp_bullet.transform.parent = GameObject.Find("Enemy_Bullet_Group").transform;
+			}
+			else
+			{
+				temp_bullet.transform.parent = GameObject.Find("Player_Bullet_Group").transform;
+			}
 
-			// temp_bullet.move_to_target.target_stored_position = new Vector3(-10,-10,0);
+			// Set the bullet's target to the current playertarget
+			temp_bullet.GetComponent<move_to_target>().selected = target_ref;
+		}
+		else
+		{
+			// weapon doesn't have enough charge to fire
+			ready = false;
 		}
 	}
 
@@ -72,6 +117,12 @@ public class weapon_01 : MonoBehaviour {
 				if ((charge + charge_rate) <= max_charge)
 				{
 					charge += charge_rate;
+		
+					// weapon is ready to fire if there's enough charge to shoot 1 bullet
+					if (charge > cost_per_bullet)
+					{
+						ready = true;
+					}
 				}
 				else if ((charge + charge_rate) > max_charge)
 				{

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class enemy_beacon : MonoBehaviour {
+public class carrot_ship : MonoBehaviour {
 	public float beacon_health = 100.0f;
 	public float max_health = 100.0f;
 	public float damage_limit = 0.10f; // 10% of max health
