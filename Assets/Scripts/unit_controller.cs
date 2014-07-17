@@ -9,11 +9,15 @@ public class unit_controller : MonoBehaviour {
 	public Vector2 maxVelocity = new Vector3(1000,1000);
 	public float ply_rot_speed = 1.0f;
 
+	public GUIText player_GUItext; // attach player GUI info
+
 	private float xAxisValue;
 	private float yAxisValue;
 	
 	private KeyCode keys_camera = KeyCode.C;
 	private KeyCode keys_fire = KeyCode.Z;
+	private KeyCode keys_wave = KeyCode.N;
+	private KeyCode keys_upgrade = KeyCode.U;
 
 	private Vector3 euler_rot; // use to calculate player rotation
 	private Vector2 player_control; // Player control input
@@ -54,7 +58,6 @@ public class unit_controller : MonoBehaviour {
 		else if (transform.rigidbody2D.velocity.y < -maxVelocity.y)
 			transform.rigidbody2D.velocity.Set(transform.rigidbody2D.velocity.x,-maxVelocity.y);
 
-
 		if (Input.GetKey(keys_camera))
 		{
 			// Change camera mode with C
@@ -65,12 +68,22 @@ public class unit_controller : MonoBehaviour {
 			// i'm firin mah lazer
 			//FireLaser();
 		}
+		else if (Input.GetKey (keys_wave))
+		{
+			// advance the wave spawner state.
+			GameObject wav_spwn = GameObject.Find("wave_spawner");
+			wav_spwn.SendMessage("AdvanceState");
+		}
+		else if (Input.GetKey (keys_upgrade))
+		{
+			// open the upgrade menu
+		}
+
 
 		// Fire a bullet if the player hits the fire button
-		if (Input.GetButtonDown("Fire1")) 
+		if (Input.GetButton("Fire1")) 
 		{
 			player_fire();
-			Debug.Log("BLAM!!");
 		}
 
 
@@ -82,6 +95,8 @@ public class unit_controller : MonoBehaviour {
 		transform.Rotate(euler_rot);
 
 		#endregion
+
+		gui_update(); // update player info text
 	}
 
 	void player_fire()
@@ -93,4 +108,30 @@ public class unit_controller : MonoBehaviour {
 		}
 	}
 
+	void gui_update()
+	{
+		player_GUItext.text = player_info_str();
+	}
+
+	string player_info_str()
+	{
+		string make_string = "";
+
+		string hp_disp_val = "";
+		string shield_disp_val = "";
+
+		hp_disp_val = ((gameObject.GetComponent<health_script>().hp / gameObject.GetComponent<health_script>().hp_max)*100).ToString();
+		//shield_disp_val = ((gameObject<health_script>.hp / gameObject.GetComponentInChildren<health_script>().hp_max)*100).ToString();
+
+		make_string += "HP:" + hp_disp_val;
+		make_string += "\n" + "SP:" + shield_disp_val;
+
+		return make_string;
+	}
+
+	void location_reset()
+	{
+		transform.position = Vector3.zero;
+		transform.rigidbody2D.velocity = Vector2.zero;
+	}
 }

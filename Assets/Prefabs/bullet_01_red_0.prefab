@@ -86,7 +86,7 @@ MonoBehaviour:
   target_stored_position: {x: 0, y: 0, z: 0}
   directionOfTravel: {x: 0, y: 0, z: 0}
   bullet_movement: 0
-  speed: 5
+  speed: 3.5
   selected: {fileID: 100000, guid: 345c88a8de24c444285ac84eec9700f1, type: 2}
 --- !u!114 &11400002
 MonoBehaviour:

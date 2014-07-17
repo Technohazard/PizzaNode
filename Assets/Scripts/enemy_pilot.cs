@@ -23,16 +23,26 @@ public class enemy_pilot : MonoBehaviour {
 
 	public bool showRanges = false;
 
-	public GameObject target;
+	public GameObject target; // default target for this unit. computed in smart_target();
 
 	private weapon_01[] weapons; // list of player weapon components;
 	private int numweapons; // number of weapons on this ship, used to check for all weapons ready.
 
+	public enum ai_state{stop, };
+	public ai_state unit_state = ai_state.stop;
+
+	// stop: do nothing
+	// face_player: rotate to track player position
+	// 
+
+
 	// Use this for initialization
 	void Start () {
-		target = GameObject.Find("Player");
-		weapons = GetComponentsInChildren<weapon_01>();
-		numweapons = weapons.Length;
+		target = smart_target();
+		// target = GameObject.Find("Player");
+
+		// create weapon list for firing.
+		getChildWeapons();
 
 		// Set up range indicators
 		sep_range_indicator.radius = SeparationRange; 
@@ -45,8 +55,24 @@ public class enemy_pilot : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		checkWeapons();
-		lookat(target); // renderer faces target, poly collider faces the wrong direction! QUATERNIONNNNS.
+		behave();
+
 		// Thrust();
+	}
+
+	void behave()
+	{
+		//decides what this unit should be doing
+		lookat(target); // renderer faces target, poly collider faces the wrong direction! QUATERNIONNNNS.
+	}
+
+	GameObject smart_target()
+	{
+		GameObject temp_target;
+
+		temp_target = GameObject.Find("Player");
+
+		return temp_target;
 	}
 
 	void Thrust()
@@ -60,12 +86,12 @@ public class enemy_pilot : MonoBehaviour {
 
 	void checkWeapons()
 	{
-		int tempweapons = numweapons;
+		int tempweapons = 0;
 
 		// test all weapons to see if they have minimal firing energy
 		foreach (weapon_01 wpn in weapons)
 		{
-			if (wpn.ready == true)
+			if ((wpn.shot_ready == true)&&(wpn.charge_ready == true))
 			{
 				tempweapons += 1;
 			}
@@ -77,6 +103,14 @@ public class enemy_pilot : MonoBehaviour {
 		}
 
 	}
+
+	void getChildWeapons()
+	{
+		// get a list of children weapon scripts for firing.
+		weapons = GetComponentsInChildren<weapon_01>();
+		numweapons = weapons.Length;
+	}
+
 
 	void Fire_all()
 	{
@@ -104,7 +138,7 @@ public class enemy_pilot : MonoBehaviour {
 	{
 		Vector3 relativePos = to_target.transform.position - transform.position;
 		Quaternion rotation = Quaternion.LookRotation(Vector3.back, relativePos);
-		gameObject.rigidbody2D.transform.rotation = rotation;
+		transform.rotation = rotation;
 	}
 
 	void Randomize()
@@ -126,6 +160,12 @@ public class enemy_pilot : MonoBehaviour {
 		currentTheta = (int)new_rot.x;
 	}
 
+	/// <summary>
+	/// Move_heading the specified new_heading.
+	/// Causes the bird to attempt to face a new direction.
+	/// Based on maxTurnTheta, the bird may not be able to complete the 
+	/// </summary>
+	/// <param name="new_heading">The direction in degrees that the bird should turn toward..</param>
 	void move_heading(int new_heading)
 	{
 		// determine if it is better to turn left or right for the new heading
@@ -157,6 +197,87 @@ public class enemy_pilot : MonoBehaviour {
 		new_loc.y %= map_size.y;
 	
 		transform.position = new_loc;
+	}
+
+	/**
+     * Get the distance in pixels between this bird and another
+     *
+     * @param  otherBird The other bird to measure the distance between
+     * @return The distance to the other bird
+     */
+	public float getDistance(GameObject otherBird) {
+		float dX = otherBird.transform.position.x - transform.position.x;
+		float dY = otherBird.transform.position.y - transform.position.y;
+		
+		return (int)Mathf.Sqrt( Mathf.Pow( dX, 2 ) + Mathf.Pow( dY, 2 ));
+	}
+
+	/**
+     * Get the distance in pixels between this bird and a point
+     *
+     * @param p The point to measure the distance between
+     * @return The distance between this bird and the point
+     */
+	public int getDistance(Vector3 p) {
+		float dX = p.x - transform.position.x;
+		float dY = p.y - transform.position.y;
+		
+		return (int)Mathf.Sqrt( Mathf.Pow( dX, 2 ) + Mathf.Pow( dY, 2 ));
+	}
+
+	/**
+     * Get the current direction that the bird is facing
+     *
+     * @return The Maximum Theta for this bird
+     */
+	public int getMaxTurnTheta() {
+		return maxTurnTheta;
+	}
+
+	/**
+     * Set the maximum turn capability of the bird for each movement.
+     *
+     * @param  theta The new maximum turning theta in degrees
+     */
+	public void setMaxTurnTheta(int theta)
+	{
+		maxTurnTheta = theta;
+	}
+	
+	/**
+     * Get the current direction of this bird
+     *
+     * @return  The direction that this bird is facing
+     */
+	public int getTheta() {
+		return currentTheta;
+	}
+	
+	/**
+     * Get the current location of this bird
+     *
+     * @return  The location of this bird
+     */
+	public Vector2 getLocation() {
+		return transform.position;
+	}
+
+	/**
+     * Set the current speed of the bird
+     *
+     * @param  speed The new speed for the bird
+     */
+	public void setSpeed( float set_speed ) {
+		speed = set_speed;
+	}
+	
+	/**
+     * Get the color of this bird
+     *
+     * @return  The color of this bird
+     */
+	public Color getColor() {
+		return color;
 	}
 
 }

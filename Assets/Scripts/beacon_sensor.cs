@@ -5,8 +5,6 @@ public class beacon_sensor : MonoBehaviour {
 
 	private bool scan_is_enemy; // reports information about anything entering sensor range
 
-	private health_script enemy_scan; // used to scan enemy colliders for enemy data
-
 	// Use this for initialization
 	void Start () {
 	
@@ -38,11 +36,8 @@ public class beacon_sensor : MonoBehaviour {
 	
 	void OnTriggerExit2D(Collider2D otherCollider)
 	{
-		
 		if (otherCollider != null)
 		{
-			enemy_scan = gameObject.transform.parent.GetComponent<health_script>();
-
 			if (otherCollider.gameObject.CompareTag(gameObject.tag))
 			{
 				scan_is_enemy = false;

@@ -101,7 +101,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   anim_start_time: 0
   anim_desired_time: 0
-  damage: 10
+  damage: 50
   life_span: 10
   EnemyShot: 1
   explode_length: 1

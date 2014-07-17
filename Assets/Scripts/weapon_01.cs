@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[RequireComponent(typeof(AudioSource))]
 public class weapon_01 : MonoBehaviour {
 
 	// What type of bullets does this weapon fire?
@@ -11,13 +12,18 @@ public class weapon_01 : MonoBehaviour {
 	public float charge_rate = 10.0f; // amount added per charge time
 	public float charge_time = 1.0f; // number of seconds before charge_rate updates
 	public float cost_per_bullet = 20.0f; // weapon energy spent everytime a bullet fires
+	public float shot_spacing = 0.3f; // seconds to wait before firing another shot.
 
-	public bool ready; // if weapon has enough charge to fire, set this to true
-
+	public bool charge_ready = false; // if weapon has enough charge to fire, set this to true
+	public bool shot_ready = false; // if weapon
 	private float timer = 0.0f; // internal timer for charging
+	private float shot_timer = 0.0f; // 
 
 	public GameObject target_ref; // reference to target 
-	
+	public AudioClip[] snd_shot; // sound of shot firing
+
+	private bool audio_connected = true; // set to true if detect audio component
+
 	// Use this for initialization
 	void Start () 
 	{
@@ -53,6 +59,7 @@ public class weapon_01 : MonoBehaviour {
 	{
 		re_target();
 		update_charge_timer();
+		update_shot_timer();
 	}
 
 	void re_target()
@@ -74,9 +81,11 @@ public class weapon_01 : MonoBehaviour {
 
 	public void Fire()
 	{
-		Debug.Log("pew!");
 		if (charge >= cost_per_bullet)
 		{
+			if (shot_timer == 0.0f)
+			{
+
 			charge -= cost_per_bullet;
 
 			// instantiate here
@@ -96,11 +105,25 @@ public class weapon_01 : MonoBehaviour {
 
 			// Set the bullet's target to the current playertarget
 			temp_bullet.GetComponent<move_to_target>().selected = target_ref;
+			
+			// after a bullet has been fired, set the spacing timer to disallow further bullets
+			shot_timer = shot_spacing;
+			
+			if (audio_connected)
+			{
+				shot_sound_play();
+			}
+
+			}
+			else
+			{
+				shot_ready = false; // weapon not ready to fire next bullet.
+			}
 		}
 		else
 		{
 			// weapon doesn't have enough charge to fire
-			ready = false;
+			charge_ready = false;
 		}
 	}
 
@@ -117,19 +140,58 @@ public class weapon_01 : MonoBehaviour {
 				if ((charge + charge_rate) <= max_charge)
 				{
 					charge += charge_rate;
-		
-					// weapon is ready to fire if there's enough charge to shoot 1 bullet
-					if (charge > cost_per_bullet)
-					{
-						ready = true;
-					}
 				}
 				else if ((charge + charge_rate) > max_charge)
 				{
 					charge = max_charge;
 				}
 			}
+			else
+			{
+				charge_ready=false;
+			}
+		
+			// weapon is ready to fire if there's enough charge to shoot 1 bullet
+			if (charge > cost_per_bullet)
+			{
+				charge_ready = true;
+			}
 		}
+	}
+
+	void update_shot_timer()
+	{
+		if (shot_timer > 0.0f)
+		{
+			if ((shot_timer - Time.deltaTime) < 0.0f)
+			{
+				shot_timer = 0.0f;
+				shot_ready = true;
+			}
+			else
+			{
+				shot_timer -= Time.deltaTime;
+				shot_ready = false;
+			}
+		}
+		else
+		{
+			shot_ready = true;
+			// no need to update, next bullet ready to fire.
+		}
+	}
+
+	void shot_sound_play()
+	{
+		if (snd_shot.Length>0)
+		{
+			audio.clip = snd_shot[0];
+			audio.Play();
+		
+			//AudioSource.PlayClipAtPoint(snd_shot[0], transform.position);
+		}
+
+
 	}
 
 }

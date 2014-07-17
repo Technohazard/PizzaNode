@@ -98,11 +98,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hp: 10
-  max_hp: 10
-  shield_max: 0
-  shield: 0
-  s_charge_rate: 0
-  s_charge_time: 0
+  hp_max: 10
+  charge_rate: 1
+  charge_time: 1
   isEnemy: 1
 --- !u!212 &21200000
 SpriteRenderer:

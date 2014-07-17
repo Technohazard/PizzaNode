@@ -54,12 +54,16 @@
      <Compile Include="Assets\Scripts\carrot_ship.cs" />
      <Compile Include="Assets\Scripts\enemy_beacon.cs" />
      <Compile Include="Assets\Scripts\enemy_pilot.cs" />
+     <Compile Include="Assets\Scripts\enemy_wave.cs" />
      <Compile Include="Assets\Scripts\health_script.cs" />
      <Compile Include="Assets\Scripts\move_to_target.cs" />
      <Compile Include="Assets\Scripts\player_target.cs" />
      <Compile Include="Assets\Scripts\scrolling_script.cs" />
+     <Compile Include="Assets\Scripts\shield.cs" />
+     <Compile Include="Assets\Scripts\sphere_swirler.cs" />
      <Compile Include="Assets\Scripts\texture_scroller.cs" />
      <Compile Include="Assets\Scripts\unit_controller.cs" />
+     <Compile Include="Assets\Scripts\wave_spawner.cs" />
      <Compile Include="Assets\Scripts\weapon_01.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

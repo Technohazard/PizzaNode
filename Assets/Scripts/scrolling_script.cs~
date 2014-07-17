@@ -17,8 +17,9 @@ public class scrolling_script : MonoBehaviour {
 
 	public bool isLooping = true; // Background is infinite
 
-	private Vector2 direction= new Vector2(-1,0); // Scrolling Direction
-	private Vector2 speed = new Vector2(2,2); // Scrolling Speed
+	public Vector2 direction= new Vector2(-1,0); // Scrolling Direction
+	public Vector2 speed = new Vector2(2.0f, 2.0f); // Scrolling Speed
+
 	private Vector2 repeatableSize;
 
 	/// <summary>

@@ -84,7 +84,7 @@ TextureImporter:
     - name: bullet_01_red_4
       rect:
         serializedVersion: 2
-        x: 12
+        x: 24
         y: 13
         width: 12
         height: 12
@@ -93,22 +93,13 @@ TextureImporter:
     - name: bullet_01_red_5
       rect:
         serializedVersion: 2
-        x: 24
-        y: 13
-        width: 12
-        height: 12
-      alignment: 0
-      pivot: {x: 0, y: 0}
-    - name: bullet_01_red_6
-      rect:
-        serializedVersion: 2
         x: 0
         y: 1
         width: 12
         height: 12
       alignment: 0
       pivot: {x: 0, y: 0}
-    - name: bullet_01_red_7
+    - name: bullet_01_red_6
       rect:
         serializedVersion: 2
         x: 12
@@ -117,7 +108,7 @@ TextureImporter:
         height: 12
       alignment: 0
       pivot: {x: 0, y: 0}
-    - name: bullet_01_red_8
+    - name: bullet_01_red_7
       rect:
         serializedVersion: 2
         x: 24

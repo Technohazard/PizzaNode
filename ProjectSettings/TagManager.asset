@@ -9,6 +9,7 @@ TagManager:
   - Bullet
   - Weapon
   - Player_Units
+  - Background
   - 
   Builtin Layer 0: Default
   Builtin Layer 1: TransparentFX
@@ -58,4 +59,8 @@ TagManager:
   - name: Foreground 01
     userID: 3
     uniqueID: 529908015
+    locked: 0
+  - name: Background 02
+    userID: 4
+    uniqueID: 1331509217
     locked: 0

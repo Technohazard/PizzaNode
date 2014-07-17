@@ -20,7 +20,7 @@ public class enemy_beacon : MonoBehaviour {
 	// Update is called once per frame
 	void Update () 
 	{
-		if ((info_checker.hp / info_checker.max_hp) <= damage_limit)
+		if ((info_checker.hp / info_checker.hp_max) <= damage_limit)
 		{
 			damaged = true;
 			animator.SetBool("Damaged", true);
