@@ -68,7 +68,20 @@ public class health_script : MonoBehaviour {
 	{
 		// do 'death' stuff here before destroying. (anims, etc)
 		// play death sound, etc.
-		Destroy(gameObject);
+
+		// tell parent enemy_wave manager that this unit died!
+		if (gameObject != null)
+		{
+			if (gameObject.transform.parent != null)
+			{
+				if (transform.root != transform)
+				{
+					gameObject.transform.parent.SendMessage("removeEnemy", gameObject);
+				}
+			}
+		}
+
+		Destroy(gameObject,0.1f);
 	}
 
 	void recharge()

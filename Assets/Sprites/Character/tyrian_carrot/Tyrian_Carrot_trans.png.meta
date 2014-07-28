@@ -1,6 +1,12 @@
 fileFormatVersion: 2
 guid: 4016b96e7c733944598b9d35b3ec81d3
 TextureImporter:
+  fileIDToRecycleName:
+    21300000: Tyrian_Carrot_trans_0
+    21300002: Tyrian_Carrot_trans_1
+    21300004: Tyrian_Carrot_trans_2
+    21300006: Tyrian_Carrot_trans_3
+    21300008: Tyrian_Carrot_trans_4
   serializedVersion: 2
   mipmaps:
     mipMapMode: 0
@@ -35,6 +41,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: .5, y: .5}
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spritePixelsToUnits: 100
   alphaIsTransparency: 1
   textureType: 8
@@ -54,6 +61,7 @@ TextureImporter:
         height: 224
       alignment: 0
       pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
     - name: Tyrian_Carrot_trans_1
       rect:
         serializedVersion: 2
@@ -63,6 +71,7 @@ TextureImporter:
         height: 224
       alignment: 0
       pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
     - name: Tyrian_Carrot_trans_2
       rect:
         serializedVersion: 2
@@ -72,6 +81,7 @@ TextureImporter:
         height: 224
       alignment: 0
       pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
     - name: Tyrian_Carrot_trans_3
       rect:
         serializedVersion: 2
@@ -81,6 +91,7 @@ TextureImporter:
         height: 224
       alignment: 0
       pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
     - name: Tyrian_Carrot_trans_4
       rect:
         serializedVersion: 2
@@ -90,5 +101,6 @@ TextureImporter:
         height: 224
       alignment: 0
       pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
   spritePackingTag: 
   userData: 

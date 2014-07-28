@@ -302,6 +302,7 @@ MonoBehaviour:
   det_range_indicator: {fileID: 5800002}
   showRanges: 0
   target: {fileID: 100000, guid: 345c88a8de24c444285ac84eec9700f1, type: 2}
+  unit_state: 0
 --- !u!114 &11400006
 MonoBehaviour:
   m_ObjectHideFlags: 1

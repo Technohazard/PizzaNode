@@ -1,6 +1,15 @@
 fileFormatVersion: 2
 guid: ff0c4389b090c40dc911dd657ff82012
 TextureImporter:
+  fileIDToRecycleName:
+    21300000: guard_bot_0
+    21300002: guard_bot_1
+    21300004: guard_bot_2
+    21300006: guard_bot_3
+    21300008: guard_bot_4
+    21300010: guard_bot_5
+    21300012: guard_bot_6
+    21300014: guard_bot_7
   serializedVersion: 2
   mipmaps:
     mipMapMode: 0
@@ -35,6 +44,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: .5, y: .5}
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spritePixelsToUnits: 100
   alphaIsTransparency: 1
   textureType: 8
@@ -54,6 +64,7 @@ TextureImporter:
         height: 26
       alignment: 0
       pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
     - name: guard_bot_1
       rect:
         serializedVersion: 2
@@ -63,6 +74,7 @@ TextureImporter:
         height: 27
       alignment: 0
       pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
     - name: guard_bot_2
       rect:
         serializedVersion: 2
@@ -72,6 +84,7 @@ TextureImporter:
         height: 26
       alignment: 0
       pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
     - name: guard_bot_3
       rect:
         serializedVersion: 2
@@ -81,6 +94,7 @@ TextureImporter:
         height: 24
       alignment: 0
       pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
     - name: guard_bot_4
       rect:
         serializedVersion: 2
@@ -90,6 +104,7 @@ TextureImporter:
         height: 24
       alignment: 0
       pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
     - name: guard_bot_5
       rect:
         serializedVersion: 2
@@ -99,6 +114,7 @@ TextureImporter:
         height: 26
       alignment: 0
       pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
     - name: guard_bot_6
       rect:
         serializedVersion: 2
@@ -108,6 +124,7 @@ TextureImporter:
         height: 27
       alignment: 0
       pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
     - name: guard_bot_7
       rect:
         serializedVersion: 2
@@ -117,5 +134,6 @@ TextureImporter:
         height: 26
       alignment: 0
       pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
   spritePackingTag: 
   userData: 
