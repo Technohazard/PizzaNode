@@ -15,7 +15,7 @@ using System.Collections.Generic;
 public class wave_spawner : MonoBehaviour {
 
 	public string levelName; // Name of the Level (collection of 'enemy_wave's)
-	public List<GameObject> waves; // list of objects with enemy_wave scripts. for now, child object.
+	public List<GameObject> waves; // list of objects with enemy_wave scripts. for now, child object
 
 	public int waveIndex = 0; // current player wave
 
@@ -32,13 +32,13 @@ public class wave_spawner : MonoBehaviour {
 	public AudioClip snd_wave; // sound of next wave
 	public AudioClip snd_state; // sound of wave state advancing
 
-	public enum wave_spawner_states {paused, wave_start, show_text, spawn, control, wave_over, next};
+	public enum wave_spawner_states {paused, wave_start, show_text, spawn, control, wave_over, next, player_died};
 	public wave_spawner_states state; // usually start paused
 
 	// dictionary of wave name to display
 	public Dictionary<int, string> wave_names;
 
-	private List<GameObject> wave_list = new List<GameObject>(); 
+	// private List<GameObject> wave_list = new List<GameObject>(); 
 
 	private string s_waveText; // private representation of string to display in guiTex
 	private float timerText = 0.0f; // how long the wave text has been onscreen
@@ -68,6 +68,13 @@ public class wave_spawner : MonoBehaviour {
 	private	static string ResetButton_text = "Reset";
 
 	#endregion
+
+	void Awake()
+	{
+		Game_Manager.Instance.DoSomething();
+		Debug.Log(Game_Manager.Instance.myGlobalVar);
+	}
+
 
 	// Use this for initialization
 	void Start () 
@@ -157,6 +164,12 @@ public class wave_spawner : MonoBehaviour {
 				}
 				break;
 			}
+			case wave_spawner_states.player_died:
+			{
+				// Player is dead, do nothing.
+				break;
+			}
+
 			default:
 			{
 				// unhandled wave_spawner states
@@ -217,6 +230,14 @@ public class wave_spawner : MonoBehaviour {
 				state_did_change = true;
 				break;
 			}
+			case wave_spawner_states.player_died:
+			{
+				state = wave_spawner_states.paused;
+				Debug.Log("W~S: Wave Paused...");
+				state_did_change = true;
+				break;
+			}
+
 		}
 
 		if (state_did_change)
@@ -246,9 +267,9 @@ public class wave_spawner : MonoBehaviour {
 			Debug.Log ("No more waves to spawn!");
 		}
 
-
+		/* 
 		GameObject wave_core = new GameObject();
-		Vector3 new_wave_offset = Vector3.left * 6.0f;
+		Vector3 new_wave_offset = original_offset;
 
 		wave_core.transform.position = Vector3.zero;
 		wave_core.transform.Translate(new_wave_offset);
@@ -256,6 +277,7 @@ public class wave_spawner : MonoBehaviour {
 		wave_core.AddComponent<enemy_wave>();
 		// add a new enemy wave to the master wave list
 		wave_list.Add(wave_core);
+		 */
 	}
 
 	void load_all_prefabs()
@@ -342,6 +364,7 @@ public class wave_spawner : MonoBehaviour {
 		if (GUI.Button(new Rect(spawnButton_pos.x, spawnButton_pos.y, spawnButton_size.x, spawnButton_size.y), spawnButton_text) ) 
 		{
 			spawn_wave();
+			NextWave();
 		}
 
 		//  "Next Phase" button.
@@ -445,5 +468,12 @@ public class wave_spawner : MonoBehaviour {
 		spawnButton_pos = new Vector2((Screen.width / 2) - (spawnButton_size.x/2), Screen.height - spawnButton_size.y);
 		phaseButton_pos = new Vector2((Screen.width / 2) - (phaseButton_size.x/2), Screen.height - phaseButton_size.y - spawnButton_size.y - 5);
 		ResetButton_pos = new Vector2(0, Screen.height - ResetButton_size.y);
+	}
+
+	void PlayerDied()
+	{
+		// player died! do wave reset things.
+		state = wave_spawner_states.player_died; // don't do anything else
+		current_wave_script.WaveReset();
 	}
 }

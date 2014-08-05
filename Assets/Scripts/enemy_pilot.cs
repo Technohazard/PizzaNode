@@ -2,47 +2,49 @@
 using System.Collections;
 
 public class enemy_pilot : MonoBehaviour {
-
-
-	// Boid algorithm variables
-	public int SeparationRange;
-	public int DetectionRange;
+	// Flocking algorithm variables
+	public float SeparationRange = 1.0f;
+	public float DetectionRange = 2.0f;
+	public CircleCollider2D sep_range_indicator;
+	public CircleCollider2D det_range_indicator;
 
 	public float speed = 1.0f;
 	public float turn_speed = 1.0f;
 
-	public Vector2 map_size = new Vector2(800, 600);
+	public Vector2 map_size; // initialized in Start() with screen size.
 
 	public int maxTurnTheta; // maximum turn radius in degrees
 	public int currentTheta; // orientation in degrees
 
-	public CircleCollider2D sep_range_indicator;
-	public CircleCollider2D det_range_indicator;
+	protected Color FlockColor; // Color identifier for flocking purposes
 
-	protected Color color;
+	public bool showRanges = false; // show detection ranges NYI because can't draw circles! (maybe w/ linerenderer?) :(
 
-	public bool showRanges = false;
-
-	public GameObject target; // default target for this unit. computed in smart_target();
+	public GameObject Target; // default target for this unit. computed in smart_target();
 
 	private weapon_01[] weapons; // list of player weapon components;
 	private int numweapons; // number of weapons on this ship, used to check for all weapons ready.
 
-	public enum ai_state{stop, };
-	public ai_state unit_state = ai_state.stop;
+	public enum ai_states {stop, face_shoot, teleporter};
+	public ai_states unit_state = ai_states.stop;
 
 	// stop: do nothing
 	// face_player: rotate to track player position
-	// 
+	// teleport = randomly teleports around the map
 
+	public float TeleportRadius = 10;
+	public float TeleportChargeTime = 5;
+	public bool TeleportToTarget = false; // if true, teleport to within radius of player location, not just "away from self"
+	private float teleportTimer = 0.0f;
 
 	// Use this for initialization
 	void Start () {
-		target = smart_target();
-		// target = GameObject.Find("Player");
+		Target = smart_target(); // target = GameObject.Find("Player");
 
 		// create weapon list for firing.
 		getChildWeapons();
+
+		map_size = new Vector2(Screen.width, Screen.height); // 800x600
 
 		// Set up range indicators
 		sep_range_indicator.radius = SeparationRange; 
@@ -53,19 +55,67 @@ public class enemy_pilot : MonoBehaviour {
 	}
 
 	// Update is called once per frame
-	void Update () {
-		checkWeapons();
+	void Update () 
+	{
+		// Handles AI states for this object 
 		behave();
-
-		// Thrust();
 	}
 
+
+	/// <summary>
+	/// Handles AI state behavior for this unit
+	/// </summary>
 	void behave()
 	{
 		//decides what this unit should be doing
-		lookat(target); // renderer faces target, poly collider faces the wrong direction! QUATERNIONNNNS.
+		switch (unit_state)
+		{
+			case ai_states.stop  :
+			{
+				// do nothing
+				break;
+			}
+			case ai_states.teleporter :
+			{
+				UpdateTeleport();
+				lookat(Target); // renderer faces target, poly collider faces the wrong direction! QUATERNIONNNNS.
+				checkWeapons(); // iterate over all child weapons and try to fire them if appropriate.
+				break;
+			}
+			case ai_states.face_shoot :
+			{
+				lookat(Target); // renderer faces target, poly collider faces the wrong direction! QUATERNIONNNNS.
+				checkWeapons(); // iterate over all child weapons and try to fire them if appropriate.
+				break;
+			}
+		} // end switch(unit_state)
+		
+		
 	}
 
+	/// <summary>
+	/// handles the teleport timer, teleports the player when appropriate
+	/// </summary>
+	void UpdateTeleport()
+	{
+		teleportTimer += Time.deltaTime;
+		if (teleportTimer >= TeleportChargeTime)
+		{
+			teleportTimer = 0.0f;
+			if (TeleportToTarget)
+			{
+				transform.position = Target.transform.position + (Vector3)Randomize_circle(TeleportRadius);
+			}
+			else
+			{
+				transform.position += (Vector3)Randomize_circle(TeleportRadius);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Does a GameObject.Find for the Player and returns it.
+	/// </summary>
 	GameObject smart_target()
 	{
 		GameObject temp_target;
@@ -88,7 +138,7 @@ public class enemy_pilot : MonoBehaviour {
 	{
 		int tempweapons = 0;
 
-		// test all weapons to see if they have minimal firing energy
+		// test all weapons to see if they have minimal firing energy and are ready to shoot.
 		foreach (weapon_01 wpn in weapons)
 		{
 			if ((wpn.shot_ready == true)&&(wpn.charge_ready == true))
@@ -100,6 +150,15 @@ public class enemy_pilot : MonoBehaviour {
 		if (tempweapons == numweapons)
 		{
 			Fire_all();
+		}
+		else if (tempweapons == 0)
+		{
+			// ouch, none of the weapons are ready!
+		}
+		else
+		{
+			// some intermediate number of weapons are ready. 
+			// Fire individual categories of weapons only? 'light', 'heavy' could be cool.
 		}
 
 	}
@@ -151,13 +210,14 @@ public class enemy_pilot : MonoBehaviour {
 
 	}
 
-	void Randomize_circle(int spawn_radius)
+	Vector2 Randomize_circle(float spawn_radius)
 	{
 		Vector2 new_loc = Random.insideUnitCircle * spawn_radius;
-		transform.position = new_loc;
 
 		Vector3 new_rot = Random.rotation.eulerAngles;	
 		currentTheta = (int)new_rot.x;
+
+		return new_loc;
 	}
 
 	/// <summary>
@@ -277,7 +337,7 @@ public class enemy_pilot : MonoBehaviour {
      * @return  The color of this bird
      */
 	public Color getColor() {
-		return color;
+		return FlockColor;
 	}
 
 }

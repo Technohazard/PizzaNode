@@ -6,6 +6,7 @@ public class weapon_01 : MonoBehaviour {
 
 	// What type of bullets does this weapon fire?
 	public GameObject bullet_type;
+	public GameObject Target; // reference to target 
 
 	public float max_charge = 100.0f; // maximum potential weapon energy
 	public float charge = 100.0f; // weapon energy available
@@ -19,7 +20,7 @@ public class weapon_01 : MonoBehaviour {
 	private float timer = 0.0f; // internal timer for charging
 	private float shot_timer = 0.0f; // 
 
-	public GameObject target_ref; // reference to target 
+
 	public AudioClip[] snd_shot; // sound of shot firing
 
 	private bool audio_connected = true; // set to true if detect audio component
@@ -36,13 +37,13 @@ public class weapon_01 : MonoBehaviour {
 		// Locate the player target and get a reference to it
 		if (transform.parent.tag == "Enemy")
 		{
-			target_ref = gameObject.transform.parent.GetComponent<enemy_pilot>().target;
+			Target = gameObject.transform.parent.GetComponent<enemy_pilot>().Target;
 		}
 		else if (transform.parent.tag == "Player")
 		{
-			target_ref = GameObject.Find("player_target");
+			Target = GameObject.Find("player_target");
 			
-			if (target_ref == null)
+			if (Target == null)
 			{
 				Debug.Log("Couldn't find player target to link to weapon firing script!");
 			}
@@ -50,6 +51,15 @@ public class weapon_01 : MonoBehaviour {
 		else
 		{
 			Debug.Log("Couldn't find player target to link to weapon firing script!");
+		}
+
+		if (GetComponent<AudioSource>())
+		{
+			audio_connected = true;
+		}
+		else
+		{
+			Debug.Log (gameObject.name.ToString() + ": No AudioSource connected on this weapon!");
 		}
 
 	}
@@ -66,58 +76,62 @@ public class weapon_01 : MonoBehaviour {
 	{
 		if (transform.parent.tag == "Enemy")
 		{
-			target_ref = gameObject.transform.parent.GetComponent<enemy_pilot>().target;
+			Target = gameObject.transform.parent.GetComponent<enemy_pilot>().Target;
 		}
 		else
 		{
-			target_ref = GameObject.Find("player_target");
+			Target = GameObject.Find("player_target");
 			
-			if (target_ref == null)
+			if (Target == null)
 			{
 				Debug.Log("Couldn't find player target to link to weapon firing script!");
 			}
 		}
 	}
 
+	/// <summary>
+	/// Called from enemy_pilot.cs script as a child object.
+	/// Checks to see if a bullet can be fired and instantiates prefab.
+	/// </summary>
 	public void Fire()
 	{
 		if (charge >= cost_per_bullet)
 		{
 			if (shot_timer == 0.0f)
 			{
+				charge -= cost_per_bullet; // ZAP
 
-			charge -= cost_per_bullet;
+				// instantiate here
+				GameObject temp_bullet;
+		
+				temp_bullet = (GameObject)Instantiate(bullet_type, transform.position, Quaternion.identity);
 
-			// instantiate here
-			GameObject temp_bullet;
-	
-			temp_bullet = (GameObject)Instantiate(bullet_type, transform.position, Quaternion.identity);
+				// check to see whether fired by enemy or player
+				if (transform.parent.tag == "Enemy")
+				{
+					temp_bullet.transform.parent = GameObject.Find("Enemy_Bullet_Group").transform;
+				}
+				else
+				{
+					temp_bullet.transform.parent = GameObject.Find("Player_Bullet_Group").transform;
+				}
 
-			// check to see whether fired by enemy or player
-			if (transform.parent.tag == "Enemy")
-			{
-				temp_bullet.transform.parent = GameObject.Find("Enemy_Bullet_Group").transform;
-			}
+				// Set the bullet's target to the current playertarget
+				temp_bullet.GetComponent<move_to_target>().selected = Target;
+				
+				// after a bullet has been fired, set the spacing timer to disallow further bullets
+				shot_timer = shot_spacing;
+				
+				if (audio_connected)
+				{
+					shot_sound_play();
+				}
+
+			} // end shot_timer == 0.0f
 			else
 			{
-				temp_bullet.transform.parent = GameObject.Find("Player_Bullet_Group").transform;
-			}
-
-			// Set the bullet's target to the current playertarget
-			temp_bullet.GetComponent<move_to_target>().selected = target_ref;
-			
-			// after a bullet has been fired, set the spacing timer to disallow further bullets
-			shot_timer = shot_spacing;
-			
-			if (audio_connected)
-			{
-				shot_sound_play();
-			}
-
-			}
-			else
-			{
-				shot_ready = false; // weapon not ready to fire next bullet.
+				// weapon not ready to fire next bullet. (cooldown timer still counting down)
+				shot_ready = false; 
 			}
 		}
 		else
@@ -146,16 +160,19 @@ public class weapon_01 : MonoBehaviour {
 					charge = max_charge;
 				}
 			}
-			else
-			{
-				charge_ready=false;
-			}
-		
+
 			// weapon is ready to fire if there's enough charge to shoot 1 bullet
-			if (charge > cost_per_bullet)
+			if (charge >= cost_per_bullet)
 			{
 				charge_ready = true;
 			}
+			else
+			{
+				charge_ready = false;
+			}
+
+		
+
 		}
 	}
 

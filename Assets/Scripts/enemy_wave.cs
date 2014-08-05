@@ -4,9 +4,18 @@ using System.Collections.Generic;
 public class enemy_wave : MonoBehaviour {
 
 	public string waveName; // Name of this wave
-	public string wave_type = "random"; // soon: "strongest_first";
+
+	public enum WaveTypes{totally_random, strongest_first, ring}; 
+	public bool DestroyOnComplete = false; // If all enemies from this wave die, destroy the game object.
+	public WaveTypes wave_type = WaveTypes.totally_random; // soon: "strongest_first";
+	public float RingRadius = 4.0f;
+	public Vector3 original_offset;
+
 	public bool waveSpawnOnStart = false;
-	public int spawnCounter = 3; // how many times this wave can spawn before running out of dudes.
+	public int MaxSpawnCounter = 3; // how many times this wave can spawn before running out of dudes.
+	private int spawnCounter; // how many times has this wave spawned?
+
+	public GameObject Target; // Spawned objects will start with a target of this Target. Usually the Player
 
 	// State machine for wave control
 	// inactive = default state, not yet ready to spawn d00ds
@@ -39,6 +48,8 @@ public class enemy_wave : MonoBehaviour {
 
 	private GameObject spawn_prefab; // temp variable for spawning prefabs
 
+	private int ring_index = 0; // index of prefab to use when spawning prefabs along a ring
+
 	// Use this for initialization
 	void Start () 
 	{
@@ -56,8 +67,25 @@ public class enemy_wave : MonoBehaviour {
 			state = waveStates.inactive;
 			// loadWave();
 		};
-	}
 
+		if (!Target)
+		{
+			Debug.Log (gameObject.name.ToString() + ": No Target for this wave object. Targeting player...");
+			Target = GameObject.Find("Player");
+			if (!Target)
+			{
+				Debug.Log (gameObject.name.ToString() + ": Targeting Player Failed! Add Player Object to scene, noob! :D");
+			}
+		}
+		else
+		{
+			// Target found! Save the initial offset for re/spawning more enemies 
+			original_offset = transform.position - Target.transform.position;
+		}
+
+		spawnCounter = MaxSpawnCounter;
+	}
+	
 	void triggerSpawn()
 	{
 		state = waveStates.spawn;
@@ -68,8 +96,27 @@ public class enemy_wave : MonoBehaviour {
 		// generate a wave, spawn all prefabs.
 		if (spawnCounter > 0)
 		{
-			// Generate a wave of enemiex, size (x, y)
-			generate_wave((int)group_size.x, (int)group_size.y);
+			switch(wave_type)
+			{
+				case  WaveTypes.totally_random:
+				{
+					// Generate a wave of enemiex, size (x, y)
+					generate_wave((int)group_size.x, (int)group_size.y);
+					break;
+				}
+				case WaveTypes.strongest_first:
+				{
+					// Generate a wave of enemiex, size (x, y)
+					generate_wave((int)group_size.x, (int)group_size.y);
+					break;
+				}
+				case WaveTypes.ring:
+				{
+					// Generate a wave of enemiex, size (x, y)
+					GenerateRingWave((int)group_size.x, RingRadius);
+					break;
+				}
+			}
 
 			spawnCounter--; // can't spawn infinitely.
 		}
@@ -94,11 +141,24 @@ public class enemy_wave : MonoBehaviour {
 		}
 	}
 
-	/**
-     * Add a bird to the flock.
-     *
-     * @param  bird The bird to add
-     */
+	void GenerateRingWave(int numDudes, float radius)
+	{
+		// float rotation = 0.0f; // starting rotation for spawning dudes
+
+		for (int i = 0; i < numDudes; i++)
+		{
+			// run conditions to determine prefab index for this wave cell
+			// the GenerateEnemy method knows it's WaveTypes.ring; 
+			spawn_prefab = GenerateEnemy(i, 0);
+			
+			addEnemy(spawn_prefab);
+		};
+	}
+
+	/// <summary>
+	/// Add a bird to the flock.
+	/// <para>enemy to add</para>
+	/// </summary>
 	public void addEnemy(GameObject to_add) 
 	{
 		enemies.Add(to_add);
@@ -139,19 +199,38 @@ public class enemy_wave : MonoBehaviour {
 		int max_prefabs = 0;
 
 		GameObject clone; 
-		GameObject temp_spawn_prefab;
+		GameObject temp_spawn_prefab = new GameObject();
 
 		prefab_index = calculate_enemy_for(xp, yp);
 		max_prefabs = enemy_prefabs.Count;
-
 
 		if (prefab_index < max_prefabs)
 		{
 			clone = enemy_prefabs[prefab_index];
 
-			temp_spawn_prefab = (GameObject)Instantiate(clone, gameObject.transform.position, Quaternion.identity);
-			temp_spawn_prefab.transform.parent = gameObject.transform;
-			temp_spawn_prefab.transform.Translate(new Vector3(xp * grid_spacing.x, yp * grid_spacing.y,0), Space.Self);			
+			if (wave_type == WaveTypes.totally_random) 
+			{
+				temp_spawn_prefab = (GameObject)Instantiate(clone, gameObject.transform.position, Quaternion.identity);
+				temp_spawn_prefab.transform.parent = gameObject.transform;
+				temp_spawn_prefab.transform.Translate(new Vector3(xp * grid_spacing.x, yp * grid_spacing.y,0), Space.Self);			
+			}
+			else if ((wave_type == WaveTypes.strongest_first))
+			{
+				// test of new spawn formula, tries to instantiate at the right location, instead of a 2-step translate process
+				Vector3 to_translate = transform.position + new Vector3(xp * grid_spacing.x, yp * grid_spacing.y,0);
+				temp_spawn_prefab = (GameObject)Instantiate(clone, to_translate, Quaternion.identity);
+				temp_spawn_prefab.transform.parent = gameObject.transform;
+			}
+
+			else if (wave_type == WaveTypes.ring)
+			{
+				// still using old style location spawning. needs to be lerped around a ring!
+				temp_spawn_prefab = (GameObject)Instantiate(clone, gameObject.transform.position, Quaternion.identity);
+				temp_spawn_prefab.transform.parent = gameObject.transform;
+				temp_spawn_prefab.transform.Translate(new Vector3(xp * grid_spacing.x, yp * grid_spacing.y,0), Space.Self);	
+			}
+		
+			return temp_spawn_prefab;
 		}
 		else
 		{
@@ -159,8 +238,8 @@ public class enemy_wave : MonoBehaviour {
 			Debug.Log (gameObject.name.ToString() +" : prefab_index < enemy_prefabs" + " PI: " + prefab_index.ToString()) ;
 			temp_spawn_prefab = new GameObject();
 			temp_spawn_prefab.transform.position = gameObject.transform.position;
+			return temp_spawn_prefab;
 		}
-		return temp_spawn_prefab;
 	}
 
 
@@ -186,12 +265,12 @@ public class enemy_wave : MonoBehaviour {
 
 		switch (wave_type)
 		{
-			case "random":
+			case WaveTypes.totally_random:
 			{
 				result = (int)(Random.value * num_prefabs);
 				break;
 			}
-			case "strongest_first":
+			case WaveTypes.strongest_first:
 			{
 				if (y == group_size.y)
 				{
@@ -206,6 +285,21 @@ public class enemy_wave : MonoBehaviour {
 				else
 				{
 					result = 0; // default unit
+				}
+				break;
+			}
+
+			case WaveTypes.ring:
+			{
+				// deploys enemies from list in a repeating, circular pattern
+				if ((ring_index < num_prefabs) && (ring_index >= 0))
+				{
+					result = ring_index;
+				ring_index++;
+				}
+				else
+				{
+					ring_index = 0;
 				}
 				break;
 			}
@@ -248,10 +342,19 @@ public class enemy_wave : MonoBehaviour {
 
 				if (enemies.Count <= 0)
 				{
-					// all enemies destroyed
+					// all enemies in this wave are destroyed
 					Debug.Log ("All enemies in wave destroyed!");
-					Debug.Log (gameObject.name.ToString() + ": Self Destructing in 5.0!");
-					state = waveStates.dead;
+
+					// If we have a respawn left, respawn!
+					// otherwise destroy the gameobject and be dead! 
+					if (spawnCounter > 0)
+					{ 
+						state = waveStates.spawn; // don't forget, this automatically decrements SpawnCounter for us, so we don't have to.
+					}
+					else
+					{
+					    state = waveStates.dead;
+					}
 				}
 
 				break;
@@ -263,8 +366,11 @@ public class enemy_wave : MonoBehaviour {
 			}
 			case waveStates.dead:
 			{
-				// All dudes are dead. Destroy in 5 s
-				Destroy(gameObject, 5.0f);
+				if (DestroyOnComplete)
+				{	Debug.Log (gameObject.name.ToString() + ": Self Destructing in 5.0!");
+					Destroy(gameObject, 5.0f);
+					
+				}
 				break;
 			}
 		}
@@ -370,5 +476,32 @@ public class enemy_wave : MonoBehaviour {
 			Debug.Log ("EP+: " + go.name.ToString ());
 		}
 
+	}
+
+	// Reset the wave and get ready to respawn it
+	// call this when the player died, from wave_spawner.
+	public void WaveReset()
+	{
+		// destroy all existing dudes;
+		ClearWave();
+	
+		// reset spawn counter to max spawn counter
+		spawnCounter = MaxSpawnCounter;
+		state = waveStates.paused;
+	}
+
+	void ClearWave()
+	{
+		// destroy all existing dudes;
+		Debug.Log ("Removing all enemies from wave: " + waveName);
+
+		foreach (GameObject enemy in enemies)
+		{
+			if (enemy != null)
+			{
+				// Enemy Found!
+				removeEnemy(enemy);
+			}
+		}
 	}
 }

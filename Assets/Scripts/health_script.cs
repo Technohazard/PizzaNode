@@ -37,19 +37,19 @@ public class health_script : MonoBehaviour {
 	{
 		if (hp > 0)
 		{ 
-			// damage always deals to the shield first, if it's up.
 			if (hp - damageCount > 0)
 			{ 
 				hp -= damageCount;
 			}
 			else
 			{
-				// damage dealt is greater than remaining shield
+				// damage dealt is greater than remaining health
 				dmg_remainder = 0.0f;
 				dmg_remainder = damageCount - hp;
 				hp = 0.0f;
 
-				gameObject.SendMessageUpwards("Damage", dmg_remainder);
+				gameObject.SendMessageUpwards("Damage", dmg_remainder); // this worked on 7/30
+
 			}
 		}
 		else
@@ -79,6 +79,13 @@ public class health_script : MonoBehaviour {
 					gameObject.transform.parent.SendMessage("removeEnemy", gameObject);
 				}
 			}
+		}
+
+		if (gameObject.tag == "Player")
+		{
+			//Oh poops, the player is dead? Game over baby.
+			GameObject.Find("wave_spawner").SendMessage("PlayerDied");
+
 		}
 
 		Destroy(gameObject,0.1f);

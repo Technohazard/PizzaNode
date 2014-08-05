@@ -134,4 +134,5 @@ public class unit_controller : MonoBehaviour {
 		transform.position = Vector3.zero;
 		transform.rigidbody2D.velocity = Vector2.zero;
 	}
+	
 }

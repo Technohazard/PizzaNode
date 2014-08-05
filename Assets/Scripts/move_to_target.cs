@@ -127,10 +127,7 @@ public class move_to_target : MonoBehaviour {
 		
 		getDirectionToTarget();
 
-		transform.Translate(
-			(directionOfTravel.x * speed * Time.deltaTime),
-			(directionOfTravel.y * speed * Time.deltaTime),
-			(directionOfTravel.z * speed * Time.deltaTime));
+		MoveTowardsTarget();
 
 	}
 
@@ -150,7 +147,20 @@ public class move_to_target : MonoBehaviour {
 	void ArriveAtTarget()
 	{
 		// ex: if (animation exists) { switch to play animation; destroy after animation length;}
-		gameObject.GetComponent<bullet_01>().impact();
+
+		if (gameObject.tag == "bullet")
+		{
+			gameObject.GetComponent<bullet_01>().impact();
+		}
+		else if (gameObject.tag == "sauce")
+		{
+			// SPLAT!
+			gameObject.GetComponent<SauceBlob>().Splat();
+		}
+		else
+		{
+			//nothing... for now!
+		}
 	}
 
 	void getDirectionToTarget()

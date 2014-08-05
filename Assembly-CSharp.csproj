@@ -46,9 +46,14 @@
 	</Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\NavArrow.cs" />
      <Compile Include="Assets\Scripts\Camera_Controller.cs" />
+     <Compile Include="Assets\Scripts\Game_Manager.cs" />
+     <Compile Include="Assets\Scripts\MenuScript.cs" />
+     <Compile Include="Assets\Scripts\NavArrow.cs" />
      <Compile Include="Assets\Scripts\RendererExtensions.cs" />
+     <Compile Include="Assets\Scripts\SauceBlob.cs" />
+     <Compile Include="Assets\Scripts\SeekPlayer_behavior.cs" />
+     <Compile Include="Assets\Scripts\Text_Squisher.cs" />
      <Compile Include="Assets\Scripts\Unit_Satellite.cs" />
      <Compile Include="Assets\Scripts\beacon_sensor.cs" />
      <Compile Include="Assets\Scripts\bullet_01.cs" />

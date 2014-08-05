@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 
 // PizzaNode scrolling script
-// assign a scrolling background item to a camera
+// assign all child scripts as scrolling background items to a camera
 
+// References:
 // better: http://pixelnest.io/tutorials/2d-game-unity/parallax-scrolling/
+// multidirectional: https://gist.github.com/Valryon/7547513
 
 public class scrolling_script : MonoBehaviour {
 
@@ -66,10 +68,13 @@ public class scrolling_script : MonoBehaviour {
 				Mathf.Abs(last.position.y - first.position.y)
 				);
 		}
+
 		if (isLinkedToPlayer == true)
 		{
 			link_player = GameObject.Find("Player");
 		}
+
+
 	}
 
 	void Update()
@@ -106,8 +111,9 @@ public class scrolling_script : MonoBehaviour {
 		// Move the camera
 		if (isLinkedToCamera)
 		{
-			//camera_link.transform.Translate(movement);
-			transform.Translate(movement);
+			Camera.main.transform.Translate(movement);
+			// camera_link.transform.Translate(movement); // this is for use with a linked camera
+			// transform.Translate(movement); // this works! 
 		}
 
 		// 4 - Loop
@@ -122,12 +128,10 @@ public class scrolling_script : MonoBehaviour {
 
 			float leftBorder = camera_link.ViewportToWorldPoint(new Vector3(0, 0, dist)).x;
 			float rightBorder = camera_link.ViewportToWorldPoint(new Vector3(1, 0, dist)).x;
-
 			// float width = Mathf.Abs(rightBorder - leftBorder);
 
 			var topBorder = camera_link.ViewportToWorldPoint(new Vector3(0, 0, dist)).y;
 			var bottomBorder = camera_link.ViewportToWorldPoint(new Vector3(0, 1, dist)).y;
-
 			// float height = Mathf.Abs(topBorder - bottomBorder);
 			
 			// Determine entry and exit border using direction
@@ -165,8 +169,9 @@ public class scrolling_script : MonoBehaviour {
 				bool checkVisible = false;
 
 				// Check if the child is already (partly) before the camera.
-				// We test the position first because the IsVisibleFrom
-				// method is a bit heavier to execute.
+				// Test the position first because the IsVisibleFrom method is heavy
+
+				// check border depending on direction
 				if (direction.x != 0)
 				{
 					if ((direction.x < 0 && (firstChild.position.x < exitBorder.x))
@@ -193,29 +198,24 @@ public class scrolling_script : MonoBehaviour {
 					// -- And we physically moves him to the further position possible
 					//---------------------------------------------------------------------------------
 
-					if (firstChild.position.x < camera_link.transform.position.x)
+					// If the child is already on the left of the camera,
+					// we test if it's completely outside and needs to be
+					// recycled.
+					if (firstChild.renderer.IsVisibleFrom(camera_link) == false)
 					{
-						// If the child is already on the left of the camera,
-						// we test if it's completely outside and needs to be
-						// recycled.
-						if (firstChild.renderer.IsVisibleFrom(camera_link) == false)
-						{
-							// Set position in the end
-							firstChild.position = new Vector3(
-								firstChild.position.x + ((repeatableSize.x + firstChild.renderer.bounds.size.x) * -1 * direction.x),
-								firstChild.position.y + ((repeatableSize.y + firstChild.renderer.bounds.size.y) * -1 * direction.y),
-								firstChild.position.z
-								);
-							
-							// The first part become the last one
-							backgroundPart.Remove(firstChild);
-							backgroundPart.Add(firstChild);
-						}
+						// Set position in the end
+						firstChild.position = new Vector3(
+							firstChild.position.x + ((repeatableSize.x + firstChild.renderer.bounds.size.x) * -1 * direction.x),
+							firstChild.position.y + ((repeatableSize.y + firstChild.renderer.bounds.size.y) * -1 * direction.y),
+							firstChild.position.z
+							);
+						
+						// The first part become the last one
+						backgroundPart.Remove(firstChild);
+						backgroundPart.Add(firstChild);
 					}
-				}
-			}
-		}
-
-	}
-
-}
+				} // end checkVisible
+			} // end firstchild != null
+		} // end isLooping
+	} // end Update
+} // end Class
