@@ -16,6 +16,7 @@ public class enemy_wave : MonoBehaviour {
 	private int spawnCounter; // how many times has this wave spawned?
 
 	public GameObject Target; // Spawned objects will start with a target of this Target. Usually the Player
+	public float mNavMinDistance = 2.0f; // distance at which the arrow stops nav'ing to point to the center of the wave
 
 	// State machine for wave control
 	// inactive = default state, not yet ready to spawn d00ds
@@ -68,19 +69,33 @@ public class enemy_wave : MonoBehaviour {
 			// loadWave();
 		};
 
-		if (!Target)
-		{
-			Debug.Log (gameObject.name.ToString() + ": No Target for this wave object. Targeting player...");
-			Target = GameObject.Find("Player");
-			if (!Target)
-			{
-				Debug.Log (gameObject.name.ToString() + ": Targeting Player Failed! Add Player Object to scene, noob! :D");
-			}
-		}
-		else
+		if (Target != null)
 		{
 			// Target found! Save the initial offset for re/spawning more enemies 
 			original_offset = transform.position - Target.transform.position;
+		}
+		else
+		{
+			Debug.Log (gameObject.name.ToString() + ": No Target for this wave object. Targeting player...");
+			Target = GameObject.FindGameObjectWithTag("Player");
+			if (Target != null)
+			{
+				// Target Player
+			}
+			else 
+			{
+				Debug.Log (gameObject.name.ToString() + ": Targeting Player Failed! Now Targeting Earth!");
+				Target = GameObject.FindGameObjectWithTag("Earth");
+				if (Target != null)
+				{
+					// Target Earth
+				}
+				else
+				{
+					Debug.Log (gameObject.name.ToString() + ": Earth not found?!");
+					Target = null;
+				}
+			}
 		}
 
 		spawnCounter = MaxSpawnCounter;
@@ -102,6 +117,26 @@ public class enemy_wave : MonoBehaviour {
 				{
 					// Generate a wave of enemiex, size (x, y)
 					generate_wave((int)group_size.x, (int)group_size.y);
+				// add a nav arrow pointing to this enemy's center
+
+				GameObject fakeArrow = Resources.Load<GameObject>("Prefabs/NavArrow_Enemy");
+				if (fakeArrow != null)
+				{
+					GameObject goArrow = (GameObject)GameObject.Instantiate(fakeArrow);
+
+					if (goArrow != null)
+					{
+						goArrow.transform.parent = GameObject.FindGameObjectWithTag("Player").transform;
+						NavArrow naControl = goArrow.GetComponent<NavArrow>();
+						if (naControl)
+						{
+							naControl.SetTarget(gameObject);
+						}
+						
+					}
+				}
+
+
 					break;
 				}
 				case WaveTypes.strongest_first:
@@ -124,7 +159,6 @@ public class enemy_wave : MonoBehaviour {
 		{
 			Debug.Log(gameObject.name.ToString() + ": Wave Exhausted!");
 		}
-
 	}
 
 	void generate_wave(int size_x, int size_y)
@@ -503,5 +537,11 @@ public class enemy_wave : MonoBehaviour {
 				removeEnemy(enemy);
 			}
 		}
+	}
+
+	// returns the navigational distance to the center of the wave.
+	public float GetNavMinDistance()
+	{
+		return mNavMinDistance;
 	}
 }

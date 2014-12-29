@@ -11,7 +11,7 @@ public class enemy_pilot : MonoBehaviour {
 	public float speed = 1.0f;
 	public float turn_speed = 1.0f;
 
-	public Vector2 map_size; // initialized in Start() with screen size.
+	public Vector2 map_size = Vector2.zero; // initialized in Start() with screen size.
 
 	public int maxTurnTheta; // maximum turn radius in degrees
 	public int currentTheta; // orientation in degrees
@@ -21,6 +21,7 @@ public class enemy_pilot : MonoBehaviour {
 	public bool showRanges = false; // show detection ranges NYI because can't draw circles! (maybe w/ linerenderer?) :(
 
 	public GameObject Target; // default target for this unit. computed in smart_target();
+	public float mNavMinDistance = 1.5f; // distance at which the arrow stops nav'ing to point to the center of the ship
 
 	private weapon_01[] weapons; // list of player weapon components;
 	private int numweapons; // number of weapons on this ship, used to check for all weapons ready.
@@ -338,6 +339,12 @@ public class enemy_pilot : MonoBehaviour {
      */
 	public Color getColor() {
 		return FlockColor;
+	}
+
+	// returns the navigational distance to the center of the ship.
+	public float GetNavMinDistance()
+	{
+		return mNavMinDistance;
 	}
 
 }

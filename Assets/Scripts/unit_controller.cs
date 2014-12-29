@@ -6,7 +6,7 @@ using System.Collections;
 public class unit_controller : MonoBehaviour {
 
 	public int speed = 5;
-	public Vector2 maxVelocity = new Vector3(1000,1000);
+	public Vector3 maxVelocity = new Vector3(10,10,0);
 	public float ply_rot_speed = 1.0f;
 
 	public GUIText player_GUItext; // attach player GUI info
@@ -34,71 +34,15 @@ public class unit_controller : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 	
-		#region Handle Player Input
-		// Sample axes
-		xAxisValue = Input.GetAxis("Horizontal");
-		yAxisValue = Input.GetAxis("Vertical");
-
-		// move the player
-		// Linear 1-1 control
-		//transform.Translate(xAxisValue * speed * Time.deltaTime, yAxisValue * speed * Time.deltaTime, 0);
-
-		// force-based control
-		player_control = new Vector2(xAxisValue * speed * Time.deltaTime, yAxisValue * speed * Time.deltaTime);
-		gameObject.rigidbody2D.AddForce(player_control);
-
-		// Clamp velocity values
-		if (transform.rigidbody2D.velocity.x > maxVelocity.x)
-			transform.rigidbody2D.velocity.Set(maxVelocity.x, transform.rigidbody2D.velocity.y);
-		else if (transform.rigidbody2D.velocity.x < -maxVelocity.x)
-			transform.rigidbody2D.velocity.Set(-maxVelocity.x, transform.rigidbody2D.velocity.y);
-		
-		if (transform.rigidbody2D.velocity.y > maxVelocity.y)
-			transform.rigidbody2D.velocity.Set(transform.rigidbody2D.velocity.x, maxVelocity.y);
-		else if (transform.rigidbody2D.velocity.y < -maxVelocity.y)
-			transform.rigidbody2D.velocity.Set(transform.rigidbody2D.velocity.x,-maxVelocity.y);
-
-		if (Input.GetKey(keys_camera))
-		{
-			// Change camera mode with C
-			GameObject.Find("Camera_Controller").SendMessage ("ChangeCameraMode");
-		}
-		else if (Input.GetKey(keys_fire))
-		{
-			// i'm firin mah lazer
-			//FireLaser();
-		}
-		else if (Input.GetKey (keys_wave))
-		{
-			// advance the wave spawner state.
-			GameObject wav_spwn = GameObject.Find("wave_spawner");
-			wav_spwn.SendMessage("AdvanceState");
-		}
-		else if (Input.GetKey (keys_upgrade))
-		{
-			// open the upgrade menu
-		}
 
 
-		// Fire a bullet if the player hits the fire button
-		if (Input.GetButton("Fire1")) 
-		{
-			player_fire();
-		}
-
-
-		#endregion
-
-		#region Animate Player
-		// Rotate at speed
-		euler_rot = new Vector3 (0,0,ply_rot_speed);
-		transform.Rotate(euler_rot);
-
-		#endregion
-
-		gui_update(); // update player info text
+		AnimatePlayerModel ();
+		updateGUI(); // update player info text
 	}
 
+	/// <summary>
+	/// moving to player.cs
+	/// </summary>
 	void player_fire()
 	{
 		// gets a list of all player child weapon scripts and calls Fire method on each
@@ -108,14 +52,26 @@ public class unit_controller : MonoBehaviour {
 		}
 	}
 
-	void gui_update()
+	/// <summary>
+	/// Handle animation states, model animation transforms.
+	/// </summary>
+	void AnimatePlayerModel ()
 	{
-		player_GUItext.text = player_info_str();
+		// Rotate at speed
+		euler_rot = new Vector3 (0, 0, ply_rot_speed);
+		transform.Rotate (euler_rot);
 	}
 
-	string player_info_str()
+	void updateGUI()
 	{
-		string make_string = "";
+		player_GUItext.text = RefreshPlayerInfoString();
+	}
+
+	/// <summary>
+	/// Generates UI-friendly strings for updating the UI with player status.
+	/// </summary>
+	string RefreshPlayerInfoString()
+	{
 
 		string hp_disp_val = "";
 		string shield_disp_val = "";
@@ -123,10 +79,10 @@ public class unit_controller : MonoBehaviour {
 		hp_disp_val = ((gameObject.GetComponent<health_script>().hp / gameObject.GetComponent<health_script>().hp_max)*100).ToString();
 		//shield_disp_val = ((gameObject<health_script>.hp / gameObject.GetComponentInChildren<health_script>().hp_max)*100).ToString();
 
-		make_string += "HP:" + hp_disp_val;
-		make_string += "\n" + "SP:" + shield_disp_val;
+		infoString += "HP:" + hp_disp_val;
+		infoString += "\n" + "SP:" + shield_disp_val;
 
-		return make_string;
+		return infoString;
 	}
 
 	void location_reset()

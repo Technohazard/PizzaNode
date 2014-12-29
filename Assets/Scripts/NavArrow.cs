@@ -8,21 +8,44 @@ using System.Collections;
 public class NavArrow : MonoBehaviour {
 
 	public Transform SelfTarget; // object to orbit
-	public Transform Target; // object to point towards
+	public GameObject Target; // object to point towards
 	public Vector2 direction = Vector2.zero;
 	public float ArrowRadius = 2.0f; 
 
+	private SpriteRenderer myRend = null;
+	private Transform lastTransform = null;
+
+	public enum NAVARROW_TYPES
+	{
+		NAV_EARTH,
+		NAV_ENEMY,
+		NAV_BEACON
+	}
+	// NAV_EARTH : points to earth
+	// NAV_ENEMY : points to enemy group
+	// NAV_BEACON : points to friendly beacon
+
+	public NAVARROW_TYPES ArrowType = NAVARROW_TYPES.NAV_EARTH; // point to earth by default
 	public float Theta; // facing angle of arrow
 
 	public bool ArrowVisible; // manual control for arrow visibility
 	public Camera myCam; //
 
 	public float TargetTheta; // Angle the arrow needs to be at to face target
+	private Quaternion TargetThetaRotation; // used to calculate nav arrow rotation relative to SelfTarget
 
 	private Vector3 DrawPos; // calculate where to draw the object.
 
 	// Use this for initialization
-	void Start () {
+	void Start () 
+	{
+
+		myRend = gameObject.GetComponent<SpriteRenderer>();
+		if (SelfTarget == null)
+		{
+			SelfTarget = GameObject.FindGameObjectWithTag("Player").transform;
+		}
+
 		if (ArrowVisible)
 		{
 			showArrow();
@@ -43,44 +66,111 @@ public class NavArrow : MonoBehaviour {
 	// Update is called once per frame
 	void Update () 
 	{
-		if (Target)
+		if (ArrowVisible)
 		{
-			if (!isOnScreen(Target))
-			{
-				if (ArrowVisible)
-				{
-					float f = GetTargetAngleMath(Target);
-					float g = GetTargetAngleQuat(Target);
+			if (Target != null)
+			{			
+				// rotate angle to face target transform
+				TargetThetaRotation = GetTargetAngleQuat(Target.transform); 				
+				transform.rotation = TargetThetaRotation;
+				transform.Rotate(new Vector3(0,0,-45));
 
-					if (f == g)
+				lastTransform = transform;
+
+				if (isOnScreen(Target.transform))
+				{
+					// Target is onscreen.
+					float tmpDistNav = 1.0f; // default dist to stop floating nav arrow
+
+					switch(ArrowType)
 					{
-						TargetTheta = GetTargetAngleQuat(Target); //
+						case NAVARROW_TYPES.NAV_ENEMY:
+						{							
+							if (Target.CompareTag("Enemy_Wave"))
+							{
+								enemy_wave tmpWave = Target.GetComponent<enemy_wave>();	
+								if (tmpWave != null)
+								{
+								tmpDistNav = tmpWave.GetNavMinDistance();	
+								}
+															
+								myRend.color = Color.red;
+							}
+							else if (Target.CompareTag("Enemy"))
+							{
+								enemy_pilot tmpPilot = Target.GetComponent<enemy_pilot>();
+								if (tmpPilot != null)
+								{
+								tmpDistNav = tmpPilot.GetNavMinDistance();	
+								}
+
+								myRend.color = Color.yellow;
+							}
+
+							break;
+						}
+						case NAVARROW_TYPES.NAV_EARTH:
+						{
+							myRend.color = Color.blue;
+
+							break;
+						}
+						case NAVARROW_TYPES.NAV_BEACON:
+						{
+							myRend.color = Color.green;
+
+							break;
+						}
+						default:
+						{
+							// whatever
+							myRend.color = Color.gray;
+							break;
+						}
+					}
+
+					// only position the target if distance is sufficiently far away
+					if (Vector2.Distance(transform.position, Target.transform.position) > ArrowRadius)
+					{
+						if (Vector2.Distance(transform.position, Target.transform.position) > tmpDistNav)
+						{
+							Vector3 relativePos = (Target.transform.position - SelfTarget.transform.position);
+							transform.position = SelfTarget.transform.position + (relativePos.normalized * ArrowRadius);
+						}
 					}
 					else
 					{
-						TargetTheta = GetTargetAngleMath(Target);
+						// arrow rotates, but doesn't move
+						transform.localPosition = lastTransform.localPosition; // should save position, etc.
 					}
+				} // end isOnScreen(Target)
+				else
+				{
+					// target is offscreen, always need to position arrow
+					Vector3 relativePos = (Target.transform.position - SelfTarget.transform.position);
+					transform.position = SelfTarget.position + (relativePos.normalized * ArrowRadius);
+				}
+			} // end Target != null
+			else
+			{
+				// No Target assigned.
 
-					DrawPos = CalculateArrowPos(); // does fancy math to figure out where the arrow should be 
-					transform.position = DrawPos;
-					rotateArrow();
+					GameObject go = GameObject.FindGameObjectWithTag("Earth");
+				if (go != null)
+				{
+					// Smart-Target Earth!
+					SetTarget(go);
 				}
 				else
 				{
-					// NavArrow isn't visible don't gotta do nuttin'! :)
+					/// couldn't find earth, no target
+					SetTarget(null);
 				}
 			}
-			else
-			{
-				// Target is onscreen.
-			}
-		}
+		} // end ArrowVisible
 		else
 		{
-			// No Target assigned.
-			// Smart-Target Earth!
-			Target = Target_Earth().transform;
-
+			// NavArrow isn't visible don't gotta do nothin'! :)
 		}
 	}
 
@@ -100,16 +190,26 @@ public class NavArrow : MonoBehaviour {
 
 	void rotateArrow()
 	{
-		transform.rotation = LookAt(Target);
+		transform.eulerAngles = new Vector3(0, 0, Theta);
+
+		/*if (transform.rotation < Theta) 
+		{
+			transform.RotateAround(Target.position, Vector3.back, Theta);
+		}
+*/
+
+		//transform.rotation = LookAt(Target);
 	}
 
-	void showArrow()
+	public void showArrow()
 	{
+		ArrowVisible = true;
 		renderer.enabled = true;
 	}
 
-	void hideArrow()
+	public void hideArrow()
 	{
+		ArrowVisible = false;
 		renderer.enabled = false;
 	}
 
@@ -192,20 +292,21 @@ public class NavArrow : MonoBehaviour {
 	float GetTargetAngleMath(Transform t)
 	{
 		float rotation;
-		rotation = Mathf.Atan2(t.position.x, t.position.y);
+		rotation = Mathf.Atan2(transform.position.x - t.position.x, transform.position.y - t.position.y);
 
 		// rotation = rotation * 180/Math.PI; //convert radians to degrees
 
 		return rotation;
 	}
 
-	float GetTargetAngleQuat(Transform t)
+	Quaternion GetTargetAngleQuat(Transform t)
 	{
-		Vector3 relativePos = t.transform.position - SelfTarget.transform.position;
+		Vector3 relativePos = (t.transform.position - SelfTarget.transform.position);
+		// Quaternion rotation = Quaternion.LookRotation(relativePos, Vector3.back);
 		Quaternion rotation = Quaternion.LookRotation(Vector3.back, relativePos);
 
-		Debug.DrawRay(transform.position, relativePos /2 , Color.grey);
-		return rotation.eulerAngles.z; 
+		Debug.DrawRay(SelfTarget.transform.position, relativePos /2 , Color.grey);
+		return rotation; 
 	}
 
 	Quaternion LookAt(Transform t)
@@ -213,18 +314,19 @@ public class NavArrow : MonoBehaviour {
 		Vector3 relativePos = t.transform.position - SelfTarget.transform.position;
 		Quaternion rotation = Quaternion.LookRotation(Vector3.back, relativePos);
 
-		Debug.DrawRay(transform.position, relativePos /2 , Color.green);
+		Debug.DrawRay(transform.localPosition, relativePos /2 , Color.green);
 
 		return rotation;
 	}
 
-	GameObject Target_Earth()
-	{
-		GameObject temp_target;
-		
-		temp_target = GameObject.Find("earth_01");
-		
-		return temp_target;
+	public void SetTarget(GameObject toTarget)
+	{	
+		Target = toTarget;
 	}
 
+	void OnDrawGizmos()
+	{
+		Gizmos.color = Color.gray;
+		Gizmos.DrawWireSphere(transform.parent.transform.position, ArrowRadius);
+	}
 }

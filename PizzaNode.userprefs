@@ -1,24 +1,12 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/beacon_sensor.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/ShieldController.cs">
     <Files>
-      <File FileName="Assets/Scripts/Game_Manager.cs" Line="14" Column="2" />
-      <File FileName="Assets/Scripts/wave_spawner.cs" Line="215" Column="29" />
-      <File FileName="Assets/Scripts/Unit_Satellite.cs" Line="59" Column="10" />
-      <File FileName="Assets/Scripts/enemy_wave.cs" Line="77" Column="99" />
-      <File FileName="Assets/Scripts/beacon_sensor.cs" Line="1" Column="1" />
+      <File FileName="Assets/PlayerController.cs" Line="15" Column="17" />
+      <File FileName="Assets/Player.cs" Line="17" Column="2" />
+      <File FileName="Assets/Scripts/unit_controller.cs" Line="77" Column="31" />
+      <File FileName="Assets/ShieldController.cs" Line="1" Column="1" />
     </Files>
-    <Pads>
-      <Pad Id="ProjectPad">
-        <State expanded="True">
-          <Node name="Assembly-CSharp" expanded="True">
-            <Node name="Scripts" expanded="True">
-              <Node name="beacon_sensor.cs" selected="True" />
-            </Node>
-          </Node>
-        </State>
-      </Pad>
-    </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />

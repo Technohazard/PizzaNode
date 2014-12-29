@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 // reference : http://www.indiedb.com/groups/unity-devs/tutorials/delegates-events-and-singletons-with-unity3d-c
 
@@ -11,11 +12,13 @@ public class Game_Manager : MonoBehaviour
 
 	// Variable
 	public string myGlobalVar = "Game_Manager Object String!";
+	public wave_spawner refWaveSpawnerScript = null; // link to this level's wavespawner script.
 
 
 	// Construct  
 	private Game_Manager()
 	{
+
 	}
 
 	//Instance
@@ -35,5 +38,17 @@ public class Game_Manager : MonoBehaviour
 	{ 
 		Debug.Log("Called DoSomething() from the Game_Manager!");
 	}  
-	
+
+	/// <summary>
+	/// locates the wavespawner object in this level.
+	/// </summary>
+	private FindWaveSpawner()
+	{
+		if (refWaveSpawnerScript != null)
+		{
+			// there's already a wavespawner referenced, check its validity
+
+		}
+
+	}
 }

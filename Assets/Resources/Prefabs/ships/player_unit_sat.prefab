@@ -13,7 +13,7 @@ GameObject:
   - 95: {fileID: 9500000}
   m_Layer: 0
   m_Name: player_unit_sat
-  m_TagString: Player
+  m_TagString: Player_Units
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -60,7 +60,7 @@ MonoBehaviour:
   radius: 2
   Speed: 1
   rotationSpeed: 80
-  orbitRange: 1
+  TargetRangeTolerance: 1
   showDebugLines: 1
   useStartDistanceAsRadius: 1
   initialOrbitSnap: 1
