@@ -2,7 +2,7 @@
 using System.Collections;
 
 public class enemy_beacon : MonoBehaviour {
-	private health_script info_checker; // used to read internal health variables for controlling damage state
+	private HealthController health_controller; // used to read internal health variables for controlling damage state
 
 	public float damage_limit = 0.10f; // 10% of max health
 	public bool alerted = false;
@@ -14,13 +14,13 @@ public class enemy_beacon : MonoBehaviour {
 	void Start () 
 	{
 		animator = this.GetComponent<Animator>();
-		info_checker = gameObject.GetComponent<health_script>();
+		health_controller = gameObject.GetComponent<HealthController>();
 	}
 	
 	// Update is called once per frame
 	void Update () 
 	{
-		if ((info_checker.hp / info_checker.hp_max) <= damage_limit)
+		if ((health_controller.hp / health_controller.hp_max) <= damage_limit)
 		{
 			damaged = true;
 			animator.SetBool("Damaged", true);

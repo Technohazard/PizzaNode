@@ -1,6 +1,17 @@
 ﻿using UnityEngine;
+
+using System;
 using System.Collections;
 
+/// <summary>
+/// Reached target.
+/// </summary>
+public delegate void ReachedTarget(Vector3 pos); // optional position 
+
+/// <summary>
+/// Helper class: Place this component on an object and give it a target.
+/// Modify parameters to 
+/// </summary>
 public class move_to_target : MonoBehaviour {
 
 	public Vector3 target_stored_position = new Vector3(0,0,0);
@@ -15,6 +26,7 @@ public class move_to_target : MonoBehaviour {
 
 	public float speed = 10.0f;
 	public GameObject selected;
+	public ReachedTarget ReachedTargetDelegate;
 
 	// Use this for initialization
 	void Start () 
@@ -147,7 +159,7 @@ public class move_to_target : MonoBehaviour {
 	void ArriveAtTarget()
 	{
 		// ex: if (animation exists) { switch to play animation; destroy after animation length;}
-
+			
 		if (gameObject.tag == "bullet")
 		{
 			gameObject.GetComponent<bullet_01>().impact();
@@ -161,6 +173,12 @@ public class move_to_target : MonoBehaviour {
 		{
 			//nothing... for now!
 		}
+
+				// Performe reachedtarget action if registered.
+				if (ReachedTargetDelegate != null)
+				{
+						ReachedTargetDelegate (this.transform.position);
+				}
 	}
 
 	void getDirectionToTarget()

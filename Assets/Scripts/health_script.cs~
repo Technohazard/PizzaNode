@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class health_script : MonoBehaviour {
+public class HealthController : MonoBehaviour {
 
 	public float hp = 10.0f;
 	public float hp_max = 10.0f;

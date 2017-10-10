@@ -37,7 +37,7 @@ public class Text_Squisher : MonoBehaviour {
 	{
 		squishOriginalValue = transform.localScale; // record whatever scale the object starts at
 		StartSquishValue = squishOriginalValue; // when starting, we set start + target squish value equal
-		fontSizeStart = guiText.fontSize;
+		fontSizeStart = GetComponent<GUIText>().fontSize;
 		fontSizeTarget = fontSizeMax;
 
 		TargetSquishValue = SquishMaxValue; // start inflating
@@ -72,7 +72,7 @@ public class Text_Squisher : MonoBehaviour {
 
 					StartSquishValue = transform.localScale;
 					TargetSquishValue = SquishMinValue;
-					fontSizeStart = guiText.fontSize;
+					fontSizeStart = GetComponent<GUIText>().fontSize;
 					fontSizeTarget = fontSizeMin;
 
 					lastSquishState = squishState_types.up;
@@ -100,7 +100,7 @@ public class Text_Squisher : MonoBehaviour {
 
 					StartSquishValue = transform.localScale;
 					TargetSquishValue = SquishMaxValue;
-					fontSizeStart = guiText.fontSize;
+					fontSizeStart = GetComponent<GUIText>().fontSize;
 					fontSizeTarget = fontSizeMax;
 
 					lastSquishState = squishState_types.down;
@@ -114,7 +114,7 @@ public class Text_Squisher : MonoBehaviour {
 		transform.localScale = Vector3.Lerp(StartSquishValue, TargetSquishValue, squishTime / squishTimeTarget);
 
 		transform.localScale = Vector3.Lerp(StartSquishValue, TargetSquishValue, squishTime / squishTimeTarget);
-		guiText.fontSize = (int)Mathf.Lerp((float)fontSizeStart, (float)fontSizeTarget, squishTime / squishTimeTarget);
+		GetComponent<GUIText>().fontSize = (int)Mathf.Lerp((float)fontSizeStart, (float)fontSizeTarget, squishTime / squishTimeTarget);
 
 	} // end Update();
 

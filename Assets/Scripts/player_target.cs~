@@ -6,29 +6,40 @@ public class player_target : MonoBehaviour {
 	public Vector3 target_pos = new Vector3(0,0,0);
 
 	public GameObject selected;
-	public bool move_to_target = false; // use movement sliding instead of setting position directly.
 
+	/// <summary>
+	/// use movement sliding instead of setting position directly.
+	/// </summary>
+	public bool move_to_target = false; 
 
-	//the speed, in units per second, we want to move towards the target
+	/// <summary>
+	/// the speed, in units per second, we want to move towards the target
+	/// </summary>
 	public float speed = 10.0f;
 
+	/// <summary>
+	/// temp var for retrieving mouse location.
+	/// </summary>
 	private Vector2 mouse_loc;
 
-	void Start () {
+	void Start () 
+	{
 		Camera.main.ScreenToWorldPoint(Input.mousePosition);
 		target_pos = gameObject.transform.position;
 	}
 	
 	// Update is called once per frame
-	void Update () {
+	void Update () 
+	{
 		mouse_loc = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
 		// Click!
-		if (Input.GetMouseButtonDown (0)) {
+		if (Input.GetMouseButtonDown (0)) 
+		{
 
 			RaycastHit2D hit = Physics2D.Raycast((mouse_loc), Vector2.zero);
 			
-			if(hit.collider != null)
+			if (hit.collider != null)
 			{
 				selected = hit.collider.gameObject;
 				Debug.Log ("Target Name: " + selected.name);

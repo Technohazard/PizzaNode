@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class enemy_pilot : MonoBehaviour {
 	// Flocking algorithm variables
@@ -7,6 +8,9 @@ public class enemy_pilot : MonoBehaviour {
 	public float DetectionRange = 2.0f;
 	public CircleCollider2D sep_range_indicator;
 	public CircleCollider2D det_range_indicator;
+
+	// References to components.
+	private Rigidbody2D _Rigidbody = null;
 
 	public float speed = 1.0f;
 	public float turn_speed = 1.0f;
@@ -23,15 +27,24 @@ public class enemy_pilot : MonoBehaviour {
 	public GameObject Target; // default target for this unit. computed in smart_target();
 	public float mNavMinDistance = 1.5f; // distance at which the arrow stops nav'ing to point to the center of the ship
 
-	private weapon_01[] weapons; // list of player weapon components;
-	private int numweapons; // number of weapons on this ship, used to check for all weapons ready.
+	private List<GameObject> WeaponList; 	// list of player weapon objects;
+	private List<Weapon> WeaponCtrlList; 	// list of player weapon components;
 
-	public enum ai_states {stop, face_shoot, teleporter};
+	private int numweapons; 		// number of weapons on this ship, used to check for all weapons ready.
+
+	public enum ai_states {
+		stop, 
+		face_shoot, 
+		teleporter,
+		flock
+		};
+
 	public ai_states unit_state = ai_states.stop;
 
-	// stop: do nothing
-	// face_player: rotate to track player position
+	// stop = do nothing
+	// face_player = rotate to track player position
 	// teleport = randomly teleports around the map
+	// flock = Obey flocking rules.
 
 	public float TeleportRadius = 10;
 	public float TeleportChargeTime = 5;
@@ -39,34 +52,48 @@ public class enemy_pilot : MonoBehaviour {
 	private float teleportTimer = 0.0f;
 
 	// Use this for initialization
-	void Start () {
-		Target = smart_target(); // target = GameObject.Find("Player");
-
-		// create weapon list for firing.
-		getChildWeapons();
+	void Start () 
+	{
+		Target = SmartTarget("Player"); // Target the player by default
+		RegisterWeapons();
 
 		map_size = new Vector2(Screen.width, Screen.height); // 800x600
 
-		// Set up range indicators
-		sep_range_indicator.radius = SeparationRange; 
-		sep_range_indicator.center = transform.position;
+		SetupAI ();
 
-		det_range_indicator.radius = DetectionRange;
-		det_range_indicator.center = transform.position;
+
+		// Register Components
+		_Rigidbody = GetComponent<Rigidbody2D>();
+
 	}
 
 	// Update is called once per frame
 	void Update () 
 	{
 		// Handles AI states for this object 
-		behave();
+		AIBehavior();
 	}
 
+	// Initialize AI range indicators and states
+	void SetupAI ()
+	{
+		if (sep_range_indicator != null)
+		{
+			sep_range_indicator.radius = SeparationRange;
+			sep_range_indicator.offset = transform.position;
+		}
+
+		if (det_range_indicator != null)
+		{
+			det_range_indicator.radius = DetectionRange;
+			det_range_indicator.offset = transform.position;
+		}
+	}
 
 	/// <summary>
 	/// Handles AI state behavior for this unit
 	/// </summary>
-	void behave()
+	void AIBehavior()
 	{
 		//decides what this unit should be doing
 		switch (unit_state)
@@ -78,17 +105,22 @@ public class enemy_pilot : MonoBehaviour {
 			}
 			case ai_states.teleporter :
 			{
-				UpdateTeleport();
-				lookat(Target); // renderer faces target, poly collider faces the wrong direction! QUATERNIONNNNS.
-				checkWeapons(); // iterate over all child weapons and try to fire them if appropriate.
+				UpdateTeleportTimer();
+				LookAt(Target); // renderer faces target, poly collider faces the wrong direction! QUATERNIONNNNS.
+				CheckWeapons(); // iterate over all child weapons and try to fire them if appropriate.
 				break;
 			}
 			case ai_states.face_shoot :
 			{
-				lookat(Target); // renderer faces target, poly collider faces the wrong direction! QUATERNIONNNNS.
-				checkWeapons(); // iterate over all child weapons and try to fire them if appropriate.
+				LookAt(Target); // renderer faces target, poly collider faces the wrong direction! QUATERNIONNNNS.
+				CheckWeapons(); // iterate over all child weapons and try to fire them if appropriate.
 				break;
 			}
+			case ai_states.flock:
+			{
+				// nothing, yet.
+			}
+			break;
 		} // end switch(unit_state)
 		
 		
@@ -97,7 +129,7 @@ public class enemy_pilot : MonoBehaviour {
 	/// <summary>
 	/// handles the teleport timer, teleports the player when appropriate
 	/// </summary>
-	void UpdateTeleport()
+	void UpdateTeleportTimer()
 	{
 		teleportTimer += Time.deltaTime;
 		if (teleportTimer >= TeleportChargeTime)
@@ -115,13 +147,13 @@ public class enemy_pilot : MonoBehaviour {
 	}
 
 	/// <summary>
-	/// Does a GameObject.Find for the Player and returns it.
+	/// Does a GameObject.Find for a target named object and returns it.
 	/// </summary>
-	GameObject smart_target()
+	GameObject SmartTarget(string TagToTarget = "Player")
 	{
 		GameObject temp_target;
 
-		temp_target = GameObject.Find("Player");
+		temp_target = GameObject.Find(TagToTarget);
 
 		return temp_target;
 	}
@@ -135,72 +167,146 @@ public class enemy_pilot : MonoBehaviour {
 
 	}
 
-	void checkWeapons()
+	/// <summary>
+	/// Iterate over all weapons. If they all have minimal firing energy and are ready to shoot, fire them.
+	/// </summary>
+	void CheckWeapons()
 	{
-		int tempweapons = 0;
+		int WeaponsReady = 0;
 
-		// test all weapons to see if they have minimal firing energy and are ready to shoot.
-		foreach (weapon_01 wpn in weapons)
+		// test all weapons 
+		if (WeaponCtrlList != null)
 		{
-			if ((wpn.shot_ready == true)&&(wpn.charge_ready == true))
+			RegisterWeapons();
+		}
+
+		if (WeaponCtrlList == null)
+		{
+			Debug.Log ("CheckWeapons(): Fail - WeaponCtrlList == null");
+			return;
+		}
+
+		foreach (Weapon wpn in WeaponCtrlList)
+		{
+			if ((wpn.ShotReady == true) && (wpn.ChargeReady == true))
 			{
-				tempweapons += 1;
+				WeaponsReady += 1;
 			}
 		}
 
-		if (tempweapons == numweapons)
+		if (WeaponsReady == WeaponCtrlList.Count)
 		{
-			Fire_all();
+			FireAllWeapons();
 		}
-		else if (tempweapons == 0)
+		else if (WeaponsReady == 0)
 		{
 			// ouch, none of the weapons are ready!
 		}
 		else
 		{
-			// some intermediate number of weapons are ready. 
+			// some intermediate number of weapons are ready.
 			// Fire individual categories of weapons only? 'light', 'heavy' could be cool.
 		}
 
 	}
 
-	void getChildWeapons()
+	/// <summary>
+	/// Get a list of all child weapon objects, add them to appropriate lists.
+	/// </summary>
+	public void RegisterWeapons()
 	{
-		// get a list of children weapon scripts for firing.
-		weapons = GetComponentsInChildren<weapon_01>();
-		numweapons = weapons.Length;
+		Weapon tmpWeaponScript = null;
+	
+		if (WeaponList == null)
+		{
+			WeaponList = new List<GameObject>();
+		}
+
+		if (WeaponCtrlList == null)
+		{
+			WeaponCtrlList = new List<Weapon>();
+		}
+
+		foreach (Transform t in transform)
+		{
+			if (t.CompareTag("Weapon"))
+			{
+				tmpWeaponScript = t.gameObject.GetComponent<Weapon>();
+				
+				if (tmpWeaponScript != null)
+				{
+					Debug.Log (this + ": found weapon " + tmpWeaponScript.DisplayName);
+					
+					// Add this weapon to gameObject and Script lists.
+					if (!WeaponList.Contains(t.gameObject))
+					{
+						WeaponList.Add(t.gameObject);
+					}
+					
+					if (!WeaponCtrlList.Contains(tmpWeaponScript))
+					{
+						WeaponCtrlList.Add(tmpWeaponScript);
+					}
+				}
+			}
+		}
+		
+		// show a count of the # of weapons found.
+		if (WeaponCtrlList.Count > 0)
+		{
+			Debug.Log(this + ": " + WeaponCtrlList.Count.ToString() + " weapons registered!");
+		}
 	}
-
-
-	void Fire_all()
+	/// <summary>
+	/// Calls Fire method on each weapon in WeaponList
+	/// </summary>
+	private void FireAllWeapons()
 	{
-		// gets a list of all player child weapon scripts and calls Fire method on each
-		foreach (weapon_01 wpn in weapons)
+		Debug.Log ("FireAllWeapons(): Called."); 
+		foreach (Weapon wpn in WeaponCtrlList)
 		{
 			wpn.Fire();
 		}
 	}
 
-	void calc_facing()
+	/// <summary>
+	/// Rotate object to face the direction of its velocity.
+	/// </summary>
+	private void calc_facing()
 	{
-		// rotate object to face the direction it's moving.
-		Vector3 dir = rigidbody2D.velocity;
+		// Rotate object to face the direction it's moving.
+		Vector3 dir = _Rigidbody.velocity;
 
-		// calculate the angle of current speed.
+		// Calculate the angle of current speed.
 		float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
 
-		// rotate the object to face that angle
+		// Rotate the object to face that angle
 		transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
 
 	}
 
-	void lookat(GameObject to_target)
+	/// <summary>
+	/// Instantly Rotate to face target GameObject
+	/// </summary>
+	/// <param name="to_target">To_target.</param>
+	void LookAt(GameObject to_target)
 	{
-		Vector3 relativePos = to_target.transform.position - transform.position;
-		Quaternion rotation = Quaternion.LookRotation(Vector3.back, relativePos);
-		transform.rotation = rotation;
+		if (to_target != null)
+		{
+			Vector3 relativePos = to_target.transform.position - transform.position;
+			Quaternion rotation = Quaternion.LookRotation(Vector3.back, relativePos);
+			transform.rotation = rotation;
+		}
+		else
+		{
+			Debug.Log ("Enemy_Pilot: Can't LookAt a null object!");
+		}
 	}
 
+
+	/// <summary>
+	/// Randomize Position and Rotation of this transform.
+	/// </summary>
 	void Randomize()
 	{
 		Vector2 new_loc = new Vector2(Random.value * map_size.x, Random.value * map_size.y);
@@ -211,6 +317,10 @@ public class enemy_pilot : MonoBehaviour {
 
 	}
 
+	/// <summary>
+	/// Randomize Position within circle, and Rotation
+	/// </summary>
+	/// <param name="spawn_radius">Spawn_radius.</param>
 	Vector2 Randomize_circle(float spawn_radius)
 	{
 		Vector2 new_loc = Random.insideUnitCircle * spawn_radius;

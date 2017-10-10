@@ -98,8 +98,8 @@ GameObject:
   - 33: {fileID: 3300000}
   - 23: {fileID: 2300000}
   - 114: {fileID: 11400012}
-  - 114: {fileID: 11400010}
   - 58: {fileID: 5800004}
+  - 114: {fileID: 11491934}
   m_Layer: 0
   m_Name: shield
   m_TagString: Enemy
@@ -185,7 +185,7 @@ Transform:
   m_Father: {fileID: 400006}
   m_RootOrder: 0
 --- !u!23 &2300000
-Renderer:
+MeshRenderer:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
@@ -193,15 +193,19 @@ Renderer:
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
-  m_LightmapIndex: 255
-  m_LightmapTilingOffset: {x: 1, y: 1, z: 0, w: 0}
   m_Materials:
   - {fileID: 2100000, guid: 2201b696c6de4405da2d33eb9c560457, type: 2}
   m_SubsetIndices: 
   m_StaticBatchRoot: {fileID: 0}
   m_UseLightProbes: 0
-  m_LightProbeAnchor: {fileID: 0}
+  m_ReflectionProbeUsage: 1
+  m_ProbeAnchor: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_PreserveUVs: 0
+  m_ImportantGI: 0
+  m_AutoUVMaxDistance: .5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingOrder: 0
 --- !u!33 &3300000
@@ -235,8 +239,10 @@ CircleCollider2D:
   m_Enabled: 1
   m_Material: {fileID: 0}
   m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_Offset: {x: 0, y: 0}
+  serializedVersion: 2
   m_Radius: 1
-  m_Center: {x: 0, y: 0}
 --- !u!58 &5800002
 CircleCollider2D:
   m_ObjectHideFlags: 1
@@ -246,8 +252,10 @@ CircleCollider2D:
   m_Enabled: 1
   m_Material: {fileID: 0}
   m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_Offset: {x: 0, y: 0}
+  serializedVersion: 2
   m_Radius: 2
-  m_Center: {x: 0, y: 0}
 --- !u!58 &5800004
 CircleCollider2D:
   m_ObjectHideFlags: 1
@@ -257,8 +265,10 @@ CircleCollider2D:
   m_Enabled: 1
   m_Material: {fileID: 0}
   m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_Offset: {x: 0, y: 0}
+  serializedVersion: 2
   m_Radius: .5
-  m_Center: {x: 0, y: 0}
 --- !u!60 &6000000
 PolygonCollider2D:
   m_ObjectHideFlags: 1
@@ -268,7 +278,9 @@ PolygonCollider2D:
   m_Enabled: 1
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Poly:
+  m_UsedByEffector: 0
+  m_Offset: {x: 0, y: 0}
+  m_Points:
     m_Paths:
     - - {x: .379999995, y: -.719999969}
       - {x: .25, y: -.439999998}
@@ -304,7 +316,8 @@ AudioSource:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 100008}
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 8300000, guid: 0407b73226da74221b1f1582d9f21640, type: 3}
   m_PlayOnAwake: 0
   m_Volume: .5
@@ -355,6 +368,16 @@ AudioSource:
       tangentMode: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
 --- !u!95 &9500000
 Animator:
   serializedVersion: 3
@@ -368,7 +391,10 @@ Animator:
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 1
+  m_LinearVelocityBlending: 0
+  m_WarningMessage: 
   m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -377,19 +403,20 @@ MonoBehaviour:
   m_GameObject: {fileID: 100000}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 495791ff8b4c34cc09c0b546fe219ca3, type: 3}
+  m_Script: {fileID: 11500000, guid: 8a4eae19265b84bc9ab1f94f1e168f6a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bullet_type: {fileID: 100000, guid: 76f079cadc32b49ada11412ac0309cd0, type: 2}
-  max_charge: 1000
-  charge: 200
-  charge_rate: 100
+  bullet_type: {fileID: 100000, guid: 61b7fbff30b614ff6a0ddc72a04ead3b, type: 2}
+  Target: {fileID: 0}
+  weaponName: 
+  max_charge: 100
+  charge: 100
+  charge_rate: 10
   charge_time: 1
-  cost_per_bullet: 200
+  cost_per_bullet: 20
   shot_spacing: .300000012
   charge_ready: 0
   shot_ready: 0
-  Target: {fileID: 0}
   snd_shot: []
 --- !u!114 &11400002
 MonoBehaviour:
@@ -402,15 +429,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3597355e746a849ac82ac12c30e1a3ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Behavior: 0
   Target: {fileID: 0}
-  rotationAxis: {x: 0, y: 0, z: 1}
-  radius: 4
-  Speed: 1
+  mFollowTarget: {fileID: 0}
+  mFollowDistance: 3
+  mDetectRange: 5
+  mNeighborSpacing: 4
+  thrust: 2
   rotationSpeed: 2
-  orbitRange: 1
-  showDebugLines: 1
   useStartDistanceAsRadius: 1
   initialOrbitSnap: 1
+  orbitRadius: 1
+  MoveTarget: {x: 0, y: 0}
+  TargetRangeTolerance: 1
+  DetectCollider: {fileID: 0}
+  mTarget: {fileID: 0}
+  showDebugLines: 1
 --- !u!114 &11400004
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -424,7 +458,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   SeparationRange: 0
   DetectionRange: 0
-  sep_range_indicator: {fileID: 5800002}
+  sep_range_indicator: {fileID: 5800000}
   det_range_indicator: {fileID: 5800002}
   speed: 1
   turn_speed: 1
@@ -433,7 +467,11 @@ MonoBehaviour:
   currentTheta: 0
   showRanges: 0
   Target: {fileID: 100000, guid: 345c88a8de24c444285ac84eec9700f1, type: 2}
+  mNavMinDistance: 1.5
   unit_state: 1
+  TeleportRadius: 10
+  TeleportChargeTime: 5
+  TeleportToTarget: 0
 --- !u!114 &11400006
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -442,12 +480,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 100006}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3541405d6542b4cadba48fcc732e3474, type: 3}
+  m_Script: {fileID: 11500000, guid: 0415d32f156984f82b2e61978ec6b7eb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  hp: 25
-  hp_max: 25
-  charge_rate: 1
+  hp: 10
+  hp_max: 10
+  charge_rate: 10
   charge_time: 1
   isEnemy: 1
 --- !u!114 &11400008
@@ -458,37 +496,21 @@ MonoBehaviour:
   m_GameObject: {fileID: 100008}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 495791ff8b4c34cc09c0b546fe219ca3, type: 3}
+  m_Script: {fileID: 11500000, guid: 8a4eae19265b84bc9ab1f94f1e168f6a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bullet_type: {fileID: 100000, guid: 61b7fbff30b614ff6a0ddc72a04ead3b, type: 2}
+  bullet_type: {fileID: 0}
+  Target: {fileID: 0}
+  weaponName: 
   max_charge: 100
-  charge: 0
+  charge: 100
   charge_rate: 10
   charge_time: 1
-  cost_per_bullet: 10
-  shot_spacing: 3
+  cost_per_bullet: 20
+  shot_spacing: .300000012
   charge_ready: 0
   shot_ready: 0
-  Target: {fileID: 0}
-  snd_shot:
-  - {fileID: 8300000, guid: 0407b73226da74221b1f1582d9f21640, type: 3}
---- !u!114 &11400010
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 100010}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3541405d6542b4cadba48fcc732e3474, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  hp: 25
-  hp_max: 25
-  charge_rate: 2
-  charge_time: 1
-  isEnemy: 1
+  snd_shot: []
 --- !u!114 &11400012
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -504,7 +526,23 @@ MonoBehaviour:
   cutoffValue_min: .75
   cutoffValue_max: .899999976
   cutoffDelta: .0250000004
-  le_parent: {fileID: 400006}
+--- !u!114 &11491934
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 100010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6e51c88415fa44578e5a5db6c8a925e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hp: 10
+  hp_max: 10
+  charge_rate: 10
+  charge_time: 1
+  isEnemy: 1
+  mShieldType: 0
 --- !u!212 &21200000
 SpriteRenderer:
   m_ObjectHideFlags: 1
@@ -514,16 +552,20 @@ SpriteRenderer:
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0
-  m_LightmapIndex: 255
-  m_LightmapTilingOffset: {x: 1, y: 1, z: 0, w: 0}
   m_Materials:
   - {fileID: 10754, guid: 0000000000000000e000000000000000, type: 0}
   m_SubsetIndices: 
   m_StaticBatchRoot: {fileID: 0}
   m_UseLightProbes: 0
-  m_LightProbeAnchor: {fileID: 0}
+  m_ReflectionProbeUsage: 1
+  m_ProbeAnchor: {fileID: 0}
   m_ScaleInLightmap: 1
-  m_SortingLayerID: 2500782999
+  m_PreserveUVs: 0
+  m_ImportantGI: 0
+  m_AutoUVMaxDistance: .5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: -1794184297
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: 4016b96e7c733944598b9d35b3ec81d3, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -538,4 +580,3 @@ Prefab:
   m_ParentPrefab: {fileID: 0}
   m_RootGameObject: {fileID: 100006}
   m_IsPrefabParent: 1
-  m_IsExploded: 1

@@ -15,7 +15,7 @@ public class texture_scroller : MonoBehaviour {
 	{
 		//Vector2 offset = Time.time * offset_scroll_amt;
 		Vector2 offset = offset_scroll_amt;
-		renderer.material.mainTextureOffset = offset;
+		GetComponent<Renderer>().material.mainTextureOffset = offset;
 	}
 
 }

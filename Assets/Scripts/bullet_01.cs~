@@ -16,7 +16,7 @@ public class bullet_01 : MonoBehaviour {
 	public float anim_desired_time;
 
 	public int damage = 1;
-	public float life_span = 20f; // Destroy this object after X seconds
+	public float life_span = 20f; // Destroy this object after this many seconds
 	public bool EnemyShot = false; // false=belongs to player. true=belongs to enemy
 	public float explode_length = 0.1f; // number of seconds an exploder-type bullet persists after impact
 
@@ -68,7 +68,7 @@ public class bullet_01 : MonoBehaviour {
 		 */
 
 
-		velocity = rigidbody2D.velocity;
+		velocity = GetComponent<Rigidbody2D>().velocity;
 
 		if (velocity.x < 0)
 		{
@@ -128,7 +128,7 @@ public class bullet_01 : MonoBehaviour {
 
 	public void impact()
 	{
-		rigidbody2D.velocity = Vector3.zero; // stop movement
+		GetComponent<Rigidbody2D>().velocity = Vector3.zero; // stop movement
 
 		if (bullet_type == bullet_behaviors.exploder)
 		{

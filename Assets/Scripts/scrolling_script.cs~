@@ -19,8 +19,11 @@ public class scrolling_script : MonoBehaviour {
 
 	public bool isLooping = true; // Background is infinite
 
-	public Vector2 direction= new Vector2(-1,0); // Scrolling Direction
-	public Vector2 speed = new Vector2(2.0f, 2.0f); // Scrolling Speed
+	public Vector2 ScrollDirection = new Vector2(-1,0);
+	public Vector2 ScrollSpeed = new Vector2(2.0f, 2.0f);
+
+	private Vector2 direction= new Vector2(-1,0); // Scrolling Direction
+	private Vector2 speed = new Vector2(2.0f, 2.0f); // Scrolling Speed
 
 	private Vector2 repeatableSize;
 
@@ -42,7 +45,7 @@ public class scrolling_script : MonoBehaviour {
 				Transform child = transform.GetChild(i);
 				
 				// Add only the visible children
-				if (child.renderer != null)
+				if (child.GetComponent<Renderer>() != null)
 				{
 					backgroundPart.Add(child);
 				}
@@ -81,28 +84,30 @@ public class scrolling_script : MonoBehaviour {
 	{
 		Vector3 movement;
 		
-			// Movement
+		// Movement
 		if (isLinkedToPlayer == true)
 		{
-			speed.x = link_player.rigidbody2D.velocity.x;
-			speed.y = link_player.rigidbody2D.velocity.y;
+			if (link_player == null)
+			{
+				RegisterPlayer("Player_Unit");
+			}
 
-			direction = link_player.rigidbody2D.velocity;
-			direction.Normalize();
-
-			movement = new Vector3(
-				link_player.rigidbody2D.velocity.x,
-				link_player.rigidbody2D.velocity.y,
-				0);
+			if (link_player != null)
+			{
+			Rigidbody2D targetRigidBody2D = link_player.GetComponent<Rigidbody2D>();
+			speed = targetRigidBody2D.velocity;
+			direction = speed.normalized;
+			}
 		}
 		else
 		{
-			movement = new Vector3(
+			direction = ScrollDirection;
+			speed = ScrollSpeed;
+		}
+		movement = new Vector3(
 			speed.x * direction.x,
 			speed.y * direction.y,
 			0);
-		}
-
 		movement *= Time.deltaTime;
 
 		// moves the entire object
@@ -201,12 +206,12 @@ public class scrolling_script : MonoBehaviour {
 					// If the child is already on the left of the camera,
 					// we test if it's completely outside and needs to be
 					// recycled.
-					if (firstChild.renderer.IsVisibleFrom(camera_link) == false)
+					if (firstChild.GetComponent<Renderer>().IsVisibleFrom(camera_link) == false)
 					{
 						// Set position in the end
 						firstChild.position = new Vector3(
-							firstChild.position.x + ((repeatableSize.x + firstChild.renderer.bounds.size.x) * -1 * direction.x),
-							firstChild.position.y + ((repeatableSize.y + firstChild.renderer.bounds.size.y) * -1 * direction.y),
+							firstChild.position.x + ((repeatableSize.x + firstChild.GetComponent<Renderer>().bounds.size.x) * -1 * direction.x),
+							firstChild.position.y + ((repeatableSize.y + firstChild.GetComponent<Renderer>().bounds.size.y) * -1 * direction.y),
 							firstChild.position.z
 							);
 						
@@ -218,4 +223,9 @@ public class scrolling_script : MonoBehaviour {
 			} // end firstchild != null
 		} // end isLooping
 	} // end Update
+
+	public void RegisterPlayer(string playerName = "Player_Unit")
+	{
+		link_player = GameObject.Find (playerName);
+	}
 } // end Class

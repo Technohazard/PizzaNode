@@ -1,22 +1,31 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
+
+using System;
 using System.Collections;
 
-/* Camera Controller for PizzaNode
-* 6/19/2014 - copied from UNCE project
-* 
-*/
-
+/// <summary>
+/// Main Camera Controller
+/// </summary>
 public class Camera_Controller : MonoBehaviour {
 
 	public Transform Target;
-	public Camera myCam;
-	public GUIText camera_GUItext;
-	
+	public Camera _Camera;
+
 	#region Spring Parameters
 	// Spring parameters
 	public float Stiffness = 1800.0f;
 	public float Damping = 600.0f;
 	public float Mass = 50.0f;
+	#endregion
+
+	#region SmoothLerp Parameters
+	// Smooth Lerp Mode Parameters.
+	public AnimationCurve LerpCurve;
+	public float LerpTime = 1.0f;
+	public float _smoothLerpTimer = 0.0f;
+	public float _lerpamt = 0.0f;
+	public bool lerping = false;
 	#endregion
 
 	// Camera Modes:
@@ -25,182 +34,187 @@ public class Camera_Controller : MonoBehaviour {
 	// Spring = uses a simulated spring to clamp camera to target
 	// Mouselook = camera follows mouse projection to 2d world XY coordinates
 	#region Camera Parameters
-	public enum Camera_Modes {Free, Track, Spring, Mouselook};
-	public Camera_Modes cam_mode = Camera_Modes.Spring; // omg spring camera is so good now! - 7/18/14
+	public enum Camera_Modes {
+								Unknown,
+								Free, 
+								Track, 
+								Spring, 
+								Mouselook,
+								SmoothLerp
+								};
+	public Camera_Modes cameraMode = Camera_Modes.Spring; // omg spring camera is so good now! - 7/18/14
 	public bool ClampZOffset = true; // Clamps camera to initial editor Z offset when true
 	public bool cam_rotate = false; // rotate camera to follow mouse pointer in Camera_Modes.MouseLook
 
 	public float mouse_track_speed = 10.0f;
 	public float turnSpeed = 1.0f;
 
-	public Vector3 cam_offset = Vector3.zero;	
+	/// <summary>
+	/// Camera offset from final computed position.
+	/// </summary>
+	public Vector3 cameraOffset = Vector3.zero;	
+
 
 	public Quaternion LookAtRotation;
 
-	private Vector3 OG_Target_Position = Vector3.zero; // store position relative to original
+	public bool PreserveTrackModeOffset = true;
+	private Vector3 _TrackModeOffset = Vector3.zero;
 
+	private Vector3 OG_Target_Position = Vector3.zero; // store position relative to original
+	private Vector3 LastTargetPosition; // the target's position 1 frame ago.
 	#endregion
+
+	public CameraPanel_UI CameraPanel;
 
 	private Vector2 mouse_loc; // used to get mouse location for Mouselook
 
 	void Start()
 	{	
+		// Make sure we have a camera.
+		if (_Camera == null)
+		{
+			_Camera = Camera.main;
+		}
+
+		// Store the current offset from target as starting offset.
 		OG_Target_Position = Target.position;
 		LookAtRotation = Quaternion.LookRotation(OG_Target_Position);
 		transform.rotation = LookAtRotation;
 
-		if (cam_offset == Vector3.zero)
+		if (cameraOffset == Vector3.zero)
 		{
 			// Defines offset for cam_mode.Track as initial camera position relative to target.
-			cam_offset = myCam.transform.position + OG_Target_Position;
-
+			cameraOffset = _Camera.transform.position + OG_Target_Position;
 		}
-		myCam.transform.LookAt(Target);
+
+		_Camera.transform.LookAt(Target);
+
+		if (CameraPanel != null)
+		{
+			CameraPanel.ControllerOwner = this;
+		}
+
+		// Set the best known camera mode.
+		SetCameraMode(Camera_Modes.Track);
+		
+		UpdateUIPanel();
 	}
 
 	void FixedUpdate()
 	{
-		if (cam_mode == Camera_Modes.Track)
+		switch (cameraMode)
 		{
-			track_target();
-		}
-		else if (cam_mode == Camera_Modes.Free)
-		{
-			cameraMove_Free();
-		}
-		else if (cam_mode == Camera_Modes.Spring)
-		{
-		// Camera behaves as if on an invisible spring
-		// buggy as fuck
-			cameraMove_Spring();	
-		}
-		else if (cam_mode == Camera_Modes.Mouselook)
-		{
-		// Camera tracks towards the mouse pointer.
-			cameraMove_MouseLook();
-		}
-		else
-		{
-			// room for other camera modes
-		}
+			case Camera_Modes.Track:
+			{
+				SnapToTarget();
+			}
+			break;
 
+			case Camera_Modes.Free:
+			{
+				cameraMove_Free();
+			}
+			break;
+
+			case Camera_Modes.Mouselook:
+				{
+					// Camera tracks towards the mouse pointer.
+					cameraMove_MouseLook();
+
+				}
+				break;
+
+			case Camera_Modes.Spring:
+			{
+				// Camera behaves as if on an invisible spring
+				// buggy as fuck
+				cameraMove_Spring();	
+			}
+			break;
+
+			case Camera_Modes.SmoothLerp:
+			{
+				UpdateLerp ();
+			}
+			break;
+		}
 	}
 
 	void Update () 
 	{
+		// Track last target position in smoothLerp mode and lerp the camera if necessary.
+		if (cameraMode == Camera_Modes.SmoothLerp)
+		{
+			if (lerping == false)
+			{
+				if (LastTargetPosition != Target.position)
+				{
+					_smoothLerpTimer = 0.0f;
+					lerping = true;
+				}
 
+				LastTargetPosition = Target.position;
+			}
+		}
+	}
+
+	void UpdateLerp ()
+	{
+		if (lerping)
+		{
+			// NOTE: using unscaledDelta so we can move the camera around while paused.
+			if (_smoothLerpTimer < LerpTime) 
+			{
+				_smoothLerpTimer += Time.unscaledDeltaTime;
+				_lerpamt = LerpCurve.Evaluate (Mathf.Lerp (0f, 1f, _smoothLerpTimer / LerpTime));
+				Vector3 displacement = (Target.position - _Camera.transform.position);
+				displacement = new Vector3(displacement.x, displacement.y, 0); // clamp Z
+				_Camera.transform.Translate(displacement * _lerpamt);
+			}
+			else 
+			{
+				// already at max.
+				SnapToTarget ();
+				lerping = false;
+			}
+		}
+		else
+		{
+			SnapToTarget();
+		}
 	}
 
 	void cameraMove_MouseLook()
 	{
-		// from: http://forum.unity3d.com/threads/rotate-sprite-to-face-direction.218557/
-	
-		// HANDLES MOVEMENT
-		Vector3 currentPosition; // stores the current position of the Camera
-		Vector3 mousePosition;  // stores mouse position for quick access
-
-		// stores the Camera's current position 
-		currentPosition = myCam.transform.position;
-
-		// stores the position of the mouse
-		mousePosition = Input.mousePosition;
-
-		// changes the mouse position variable to match the mouses position in relation to the camera
-		mousePosition = Camera.main.ScreenToWorldPoint(mousePosition);
-
-		// actually transforms the target position using the lerp function, which slowly moves the sprite between
-		// the first vector position and the second vector position at the rate of moveSpeed       
-		myCam.transform.position = Vector2.Lerp(myCam.transform.position, mousePosition, mouse_track_speed);
-		
-		if (cam_rotate == true)
-		{
-			// HANDLES ROTATION
-			// calculate the angle we need to look toward
-			Vector3 moveToward;
-			Vector3 moveDirection; 
-
-			// gets the mouse position relative to the camera and stores it in movetoward
-			moveToward = Camera.main.ScreenToWorldPoint( Input.mousePosition );
-
-			// moveDirection (variable announced at top of class) becomes moveToward - current position
-			moveDirection = moveToward - currentPosition;
-
-			// make z part of the vector 0 as we dont need it
-			moveDirection.z = 0;
-
-			// normalize the vector so its in units of 1
-			moveDirection.Normalize();
-
-			// if we have moved and need to rotate
-			if (moveDirection != Vector3.zero)
-			{
-				// calculates the angle we should turn towards, - 90 makes the sprite rotate
-				float targetAngle;
-				targetAngle = Mathf.Atan2(moveDirection.y, moveDirection.x) * Mathf.Rad2Deg - 90;
-
-				// actually rotates the sprite using Slerp (from its previous rotation, to the new one at the designated speed.
-				myCam.transform.rotation = Quaternion.Slerp (transform.rotation, Quaternion.Euler (0, 0, targetAngle), turnSpeed * Time.deltaTime);
-			}
-		}
-
-		/* 
-		Vector3 moveToward;
-		
-		// gets the mouse position relative to the camera and stores it in movetoward
-		moveToward = Camera.main.ScreenToWorldPoint( Input.mousePosition );
-		
-		player_loc = Camera.main.WorldToScreenPoint(Target.position); // player location in-world on screen.
-		
-		Vector3 mouse_loc;
-		mouse_loc = Input.mousePosition; // location of the mouse pointer on screen
-		
-		float dist = Vector3.Distance(player_loc, mouse_loc); // get the distance between player/mouse before we wipe it out
-		
-		Vector3 delta = mouse_loc + player_loc;
-		Debug.DrawLine(player_loc, delta, Color.green); // Delta Line
-		
-		delta.Normalize(); // normalized heading
-		
-		myCam.transform.position = Target.position + (delta * mouse_track_speed);
-		*/
+		Vector3 mousePosition = Input.mousePosition;
+		cameraOffset = mousePosition;
 	}
 
-	void track_target()
+	void SnapToTarget()
 	{
-		// Sets the transform position to the location of the target, plus XY offset.
 		if (ClampZOffset)
 		{
-			myCam.transform.position = Target.position + cam_offset;
+			// Clamping z offset means camera keeps its z-height when snapping.
+			Vector3 delta_2d = new Vector3(Target.position.x, Target.position.y, _Camera.transform.position.z);
+			_Camera.transform.position = delta_2d;
 		}
 		else
 		{
-			Vector3 delta_2d = new Vector3(Target.position.x, Target.position.y, 0);
-			// z is free to swing!
-			myCam.transform.position += delta_2d;
+			// camera just gets set to target position + its offset.
+			_Camera.transform.position = Target.position + cameraOffset;
 		}
+
 	}
 
-	void OnGUI() 
+	private void UpdateUIPanel() 
 	{
-		Vector2 menu_size = new Vector2(200, 40); // camera mode box
-		Vector2 menu_pos = new Vector2((Screen.width - menu_size.x),0);
-
-		Vector2 button_size = new Vector2(80, 20); // camera mode button
-		Vector2 button_pos = new Vector2(menu_pos.x + (menu_size.x / 2) - (button_size.x / 2), 20f);
-
-		// top right
-		string poostring = "Camera Mode: " + cam_mode.ToString();
-		GUI.Box(new Rect(menu_pos.x, menu_pos.y, menu_size.x, menu_size.y), poostring);
-		//update camera mode display text (font)
-		camera_GUItext.text = poostring;
-
-		//GUI.Label (new Rect (button_pos.x, button_pos.y - (button_size.y/2), button_size.x, button_size.y), poostring);
-
-		// Make the first button.
-		if(GUI.Button(new Rect(button_pos.x, button_pos.y, button_size.x, button_size.y), "Next Mode")) 
+		if (CameraPanel == null)
 		{
-			ChangeCameraMode();
+			return;
 		}
+
+		string poostring = String.Format("Camera Mode:\n{0}", cameraMode.ToString());
+		CameraPanel.SetText(poostring);
 	}
 
 	/// <summary>
@@ -210,38 +224,21 @@ public class Camera_Controller : MonoBehaviour {
 	void cameraMove_Spring()		
 	{
 		Vector3 cameraVelocity = Vector3.zero;
-		Vector3 stretch = myCam.transform.position - Target.position;
+		Vector3 stretch = _Camera.transform.position - Target.position;
 		Vector3 force = -Stiffness * stretch - Damping * cameraVelocity;
 		Vector3 acceleration = force / Mass;
 
 		Vector3 calc_pos; // final position
-		calc_pos = myCam.transform.position;
+		calc_pos = _Camera.transform.position;
 
 		cameraVelocity += acceleration * Time.deltaTime;
 		calc_pos += cameraVelocity * Time.deltaTime;
 		if (ClampZOffset)
 		{
-			calc_pos.z = cam_offset.z; // 
+			calc_pos.z = cameraOffset.z; // 
 		}
 
-		myCam.transform.position = calc_pos;
-
-		/* 
-		Matrix4x4 CamMat = new Matrix4x4();
-		
-		CamMat.SetRow(0, new Vector4(-Target.forward.x, -Target.forward.y, -Target.forward.z));		
-		CamMat.SetRow(1, new Vector4(Target.up.x, Target.up.y, Target.up.z));
-		Vector3 modRight = Vector3.Cross(CamMat.GetRow(1), CamMat.GetRow(0));	
-		CamMat.SetRow(2, new Vector4(modRight.x, modRight.y, modRight.z));
-		
-		desiredPosition = Target.position + cam_offset; // + TransformNormal(cam_offset, CamMat);	
-		//Vector3 lookat = Target.position + TransformNormal(LookAtOffset, CamMat);
-		
-		// myCam.transform.LookAt(lookat, Target.up);
-		myCam.transform.LookAt(Target.position);
-		
-		myCam.projectionMatrix = Matrix4x4.Perspective(myCam.fieldOfView, myCam.aspect, myCam.nearClipPlane, myCam.farClipPlane);
-		*/
+		_Camera.transform.position = calc_pos;
 	}
 	
 	Vector3 TransformNormal(Vector3 normal, Matrix4x4 matrix)
@@ -263,60 +260,107 @@ public class Camera_Controller : MonoBehaviour {
 		// Control the camera w/ XY input = Free Look
 		float xAxisValue = Input.GetAxis("Horizontal");
 		float zAxisValue = Input.GetAxis("Vertical");
-		myCam.transform.Translate(new Vector3(xAxisValue, zAxisValue,0.0f));
+		_Camera.transform.Translate(new Vector3(xAxisValue, zAxisValue,0.0f));
 	}
 
 	/// <summary>
 	/// Cycles the camera mode.
 	/// </summary>
-	void ChangeCameraMode()
+	public void ChangeCameraMode()
 	{
-		if (cam_mode == Camera_Modes.Track)
+		switch (cameraMode)
 		{
-			SetCameraMode(Camera_Modes.Free);
-		}
-		else if (cam_mode == Camera_Modes.Free)
-		{
-			SetCameraMode(Camera_Modes.Spring);
-		}
-		else if (cam_mode == Camera_Modes.Spring)
-		{
-			SetCameraMode(Camera_Modes.Mouselook);
-		}
-		else if (cam_mode == Camera_Modes.Mouselook)
-		{
-			SetCameraMode(Camera_Modes.Track);
+			case Camera_Modes.Track:
+			{ SetCameraMode(Camera_Modes.Free); }
+			break;
+
+			case Camera_Modes.Free:
+			{ SetCameraMode(Camera_Modes.Spring); }
+			break;
+
+			case Camera_Modes.Spring:
+			{ SetCameraMode(Camera_Modes.Mouselook); }
+			break;
+
+			case Camera_Modes.Mouselook:
+			{ SetCameraMode(Camera_Modes.SmoothLerp); }
+			break;
+
+			default:
+			case Camera_Modes.SmoothLerp:
+			{ SetCameraMode(Camera_Modes.Track); }
+			break;
 		}
 	}
 
-	void SetCameraMode(Camera_Modes to_set)
+	void SetCameraMode(Camera_Modes mode)
 	{
-		if (to_set == Camera_Modes.Track)
-		{	
-			target_player();
-			track_target();
-			cam_mode = to_set;
-		}
-		if (to_set == Camera_Modes.Free)
-		{	
-			cam_mode = to_set;
-		}
-		if (to_set == Camera_Modes.Spring)
-		{	
-			target_player();
-			cam_mode = to_set;
-		}
-		if (to_set == Camera_Modes.Mouselook)
-		{	
-			cam_mode = to_set;
+		// When switching out of Track mode, preserve offset.
+		if ((cameraMode == Camera_Modes.Track) && (cameraMode != mode))
+		{
+			if (PreserveTrackModeOffset)
+			{
+				_TrackModeOffset = cameraOffset;
+			}
 		}
 
+		// Select new camera mode.
+		switch (mode)
+		{
+			case (Camera_Modes.Track):
+			{	
+				TargetPlayer();
+
+				if (PreserveTrackModeOffset)
+				{
+					cameraOffset = _TrackModeOffset; // snap to target.
+				}
+				else
+				{
+					cameraOffset = Vector3.zero; // snap to target.
+				}
+
+				SnapToTarget();
+				cameraMode = mode;
+			}
+			break;
+
+			case (Camera_Modes.Free):
+			{	
+				cameraMode = mode;
+			}
+			break;
+
+			case (Camera_Modes.Spring):
+			{	
+				TargetPlayer();
+				cameraMode = mode;
+			}
+			break;
+
+			case (Camera_Modes.Mouselook):
+			{	
+				cameraMode = mode;
+			}
+			break;
+
+			case Camera_Modes.SmoothLerp:
+			{
+				_smoothLerpTimer = 0.0f;
+				TargetPlayer();
+				lerping = true;
+				cameraMode = mode;
+			}
+			break;
+		}
+
+		UpdateUIPanel(); 	
 	}
 
 	/// <summary>
 	/// Change the primary Camera tracking target.
 	/// </summary>
-	void SetCamera_Target(Transform target_new)
+	void SetTarget(Transform target_new)
 	{
 		Target = target_new;
 	}
@@ -324,9 +368,84 @@ public class Camera_Controller : MonoBehaviour {
 	/// <summary>
 	/// Find the player's transform and set camera target to it.
 	/// </summary>
-	void target_player()
+	void TargetPlayer()
 	{
-		Transform player_transform = GameObject.Find("Player").transform;
-		SetCamera_Target(player_transform);
+		Transform player_transform = GameObject.Find("Player_Unit").transform;
+		SetTarget(player_transform);
 	}
+
+		/// <summary>
+		///  check if Target's transform is visible, return true / false
+		/// </summary>
+		/// <returns><c>true</c>, if onscreen was ised, <c>false</c> otherwise.</returns>
+		/// <param name="">.</param>
+		public bool isOnScreen(Transform tform)
+		{
+			Vector3 currentCamPos;
+			Vector3 objPos;
+			// Rect r = camera.pixelRect;
+			//---------------------------------------------------------------------------------
+			// 2 - Check if the object is before, in or after the camera bounds
+			//---------------------------------------------------------------------------------
+
+			// Camera borders
+			float zdist = (transform.position - _Camera.transform.position).z;
+
+			float leftBorder = _Camera.ViewportToWorldPoint(new Vector3(0, 0, zdist)).x;
+			float rightBorder = _Camera.ViewportToWorldPoint(new Vector3(1, 0, zdist)).x;
+			// float width = Mathf.Abs(rightBorder - leftBorder);
+
+			var topBorder = _Camera.ViewportToWorldPoint(new Vector3(0, 0, zdist)).y;
+			var bottomBorder = _Camera.ViewportToWorldPoint(new Vector3(0, 1, zdist)).y;
+			// float height = Mathf.Abs(topBorder - bottomBorder);
+
+			// Determine entry and exit border using direction
+//			Vector3 exitBorder = Vector3.zero;
+//			Vector3 entryBorder = Vector3.zero;
+
+//			if (direction.x < 0)
+//			{
+//					exitBorder.x = leftBorder;
+//					entryBorder.x = rightBorder;
+//			}
+//			else if (direction.x > 0)
+//			{
+//					exitBorder.x = rightBorder;
+//					entryBorder.x = leftBorder;
+//			}
+//
+//			if (direction.y < 0)
+//			{
+//					exitBorder.y = bottomBorder;
+//					entryBorder.y = topBorder;
+//			}
+//			else if (direction.y > 0)
+//			{
+//					exitBorder.y = topBorder;
+//					entryBorder.y = bottomBorder;
+//			}
+
+			currentCamPos = _Camera.WorldToScreenPoint(_Camera.transform.position);
+			objPos = _Camera.WorldToScreenPoint(tform.position);
+
+			if (objPos.x < (currentCamPos.x - (_Camera.pixelWidth / 2)))
+			{
+				return false;
+			}
+			else if (objPos.x > (currentCamPos.x + (_Camera.pixelWidth / 2)))
+			{
+				return false;
+			}
+
+			if (objPos.y < (currentCamPos.y - (_Camera.pixelHeight / 2)))
+			{
+				return false;
+			}
+			else if (objPos.y > (currentCamPos.y + (_Camera.pixelHeight / 2)))
+			{
+				return false;
+			}
+
+			return true;
+		}
 }

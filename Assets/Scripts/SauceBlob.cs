@@ -12,7 +12,7 @@ public class SauceBlob : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-	 // Control sauceblob animation here, if needed. Pshhh.
+	 // Control sauceblob animation here, if needed.
 
 	}
 
@@ -24,4 +24,5 @@ public class SauceBlob : MonoBehaviour {
 	{
 
 	}
+
 }

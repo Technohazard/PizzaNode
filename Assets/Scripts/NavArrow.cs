@@ -7,12 +7,31 @@ using System.Collections;
 /// </summary>
 public class NavArrow : MonoBehaviour {
 
-	public Transform SelfTarget; // object to orbit
-	public GameObject Target; // object to point towards
-	public Vector2 direction = Vector2.zero;
+	/// <summary>
+	/// Object to orbit
+	/// </summary>
+	public Transform Owner; 
+
+	/// <summary>
+	/// object to point towards
+	/// </summary>
+	public GameObject Target;
+	
+	/// <summary>
+	/// Cache of direction calculated from owner to target
+	/// </summary>
+	public Vector3 direction = Vector3.zero;
+
+	/// <summary>
+	/// Distance the arrow maintains from Owner (radius)
+	/// </summary>
 	public float ArrowRadius = 2.0f; 
 
-	private SpriteRenderer myRend = null;
+	/// <summary>
+	/// The actual sprite for the arrow.
+	/// </summary>
+	public SpriteRenderer _SpriteRenderer = null;
+
 	private Transform lastTransform = null;
 
 	public enum NAVARROW_TYPES
@@ -22,58 +41,76 @@ public class NavArrow : MonoBehaviour {
 		NAV_BEACON
 	}
 	// NAV_EARTH : points to earth
-	// NAV_ENEMY : points to enemy group
+	// NAV_ENEMY : points to enemy group or enemy.
 	// NAV_BEACON : points to friendly beacon
 
 	public NAVARROW_TYPES ArrowType = NAVARROW_TYPES.NAV_EARTH; // point to earth by default
-	public float Theta; // facing angle of arrow
+	
+	private bool _visible = true;
+	public bool ArrowVisible
+		{
+				get
+				{
+						return _visible;
+				}
+				set
+				{
+						_visible = value;
+						if (value)
+						{
+								Show();
+						}
+						else{
+								Hide();
+						}
+				}
+		}
 
-	public bool ArrowVisible; // manual control for arrow visibility
-	public Camera myCam; //
-
-	public float TargetTheta; // Angle the arrow needs to be at to face target
-	private Quaternion TargetThetaRotation; // used to calculate nav arrow rotation relative to SelfTarget
-
-	private Vector3 DrawPos; // calculate where to draw the object.
+	public Camera_Controller _Camera_Controller;
 
 	// Use this for initialization
 	void Start () 
 	{
+				if (_SpriteRenderer == null) {
+						_SpriteRenderer = gameObject.GetComponent<SpriteRenderer> ();
+				}
 
-		myRend = gameObject.GetComponent<SpriteRenderer>();
-		if (SelfTarget == null)
+		if (_Camera_Controller == null)
 		{
-			SelfTarget = GameObject.FindGameObjectWithTag("Player").transform;
+				_Camera_Controller = GameObject.FindObjectOfType<Camera_Controller> ();
 		}
 
-		if (ArrowVisible)
+		if (Owner == null)
 		{
-			showArrow();
-		}
-		else
-		{
-			hideArrow(); // arrow always starts hidden
+				Owner = GameObject.FindGameObjectWithTag("Player").transform;
 		}
 
-		if (myCam == null)
+		if (Owner != null) 
 		{
-			myCam = Camera.main;
+			transform.position = Owner.transform.position + new Vector3 (0, ArrowRadius, 0);
 		}
 
-		DrawPos = transform.position + new Vector3(0, ArrowRadius, 0);
+		ArrowVisible = true;
 	}
 	
 	// Update is called once per frame
 	void Update () 
 	{
-		if (ArrowVisible)
+		if (!ArrowVisible) 
 		{
-			if (Target != null)
-			{			
-				// rotate angle to face target transform
-				TargetThetaRotation = GetTargetAngleQuat(Target.transform); 				
-				transform.rotation = TargetThetaRotation;
-				transform.Rotate(new Vector3(0,0,-45));
+			return;
+		}
+
+		if (Target == null) {			
+				return;
+		}
+
+				// Get vector diff to target from Owner.
+				direction = (Target.transform.position - Owner.transform.position);
+				direction.Normalize ();
+
+				// Point at the target.
+				transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.FromToRotation (transform.position, Target.transform.position - transform.position),Time.deltaTime);
 
 				lastTransform = transform;
 
@@ -94,7 +131,7 @@ public class NavArrow : MonoBehaviour {
 								tmpDistNav = tmpWave.GetNavMinDistance();	
 								}
 															
-								myRend.color = Color.red;
+								_SpriteRenderer.color = Color.red;
 							}
 							else if (Target.CompareTag("Enemy"))
 							{
@@ -104,38 +141,38 @@ public class NavArrow : MonoBehaviour {
 								tmpDistNav = tmpPilot.GetNavMinDistance();	
 								}
 
-								myRend.color = Color.yellow;
+							_SpriteRenderer.color = Color.red;
 							}
 
 							break;
 						}
 						case NAVARROW_TYPES.NAV_EARTH:
 						{
-							myRend.color = Color.blue;
+							//_SpriteRenderer.color = Color.blue;
 
 							break;
 						}
 						case NAVARROW_TYPES.NAV_BEACON:
 						{
-							myRend.color = Color.green;
+							//_SpriteRenderer.color = Color.green;
 
 							break;
 						}
 						default:
 						{
 							// whatever
-							myRend.color = Color.gray;
+							//_SpriteRenderer.color = Color.gray;
 							break;
 						}
 					}
 
+					float distance = Vector2.Distance (transform.position, Target.transform.position);
 					// only position the target if distance is sufficiently far away
-					if (Vector2.Distance(transform.position, Target.transform.position) > ArrowRadius)
+					if (distance > ArrowRadius)
 					{
-						if (Vector2.Distance(transform.position, Target.transform.position) > tmpDistNav)
+						if (distance > tmpDistNav)
 						{
-							Vector3 relativePos = (Target.transform.position - SelfTarget.transform.position);
-							transform.position = SelfTarget.transform.position + (relativePos.normalized * ArrowRadius);
+							transform.position = Owner.transform.position + (direction.normalized * ArrowRadius);
 						}
 					}
 					else
@@ -147,31 +184,8 @@ public class NavArrow : MonoBehaviour {
 				else
 				{
 					// target is offscreen, always need to position arrow
-					Vector3 relativePos = (Target.transform.position - SelfTarget.transform.position);
-					transform.position = SelfTarget.position + (relativePos.normalized * ArrowRadius);
+					transform.position = Owner.position + (direction.normalized * ArrowRadius);
 				}
-			} // end Target != null
-			else
-			{
-				// No Target assigned.
-
-					GameObject go = GameObject.FindGameObjectWithTag("Earth");
-				if (go != null)
-				{
-					// Smart-Target Earth!
-					SetTarget(go);
-				}
-				else
-				{
-					/// couldn't find earth, no target
-					SetTarget(null);
-				}
-			}
-		} // end ArrowVisible
-		else
-		{
-			// NavArrow isn't visible don't gotta do nothin'! :)
-		}
 	}
 
 	/// <summary>
@@ -183,111 +197,21 @@ public class NavArrow : MonoBehaviour {
 		Vector3 temp_pos = Vector3.zero;
 
 		// Straight up from transform!
-		temp_pos = SelfTarget.transform.position + new Vector3(0, ArrowRadius, 0);
+		temp_pos = Owner.transform.position + new Vector3(0, ArrowRadius, 0);
 
 		return temp_pos;
 	}
 
-	void rotateArrow()
+	public void Show()
 	{
-		transform.eulerAngles = new Vector3(0, 0, Theta);
-
-		/*if (transform.rotation < Theta) 
-		{
-			transform.RotateAround(Target.position, Vector3.back, Theta);
-		}
-*/
-
-		//transform.rotation = LookAt(Target);
+		_SpriteRenderer.enabled = true;
 	}
 
-	public void showArrow()
+	public void Hide()
 	{
-		ArrowVisible = true;
-		renderer.enabled = true;
+		_SpriteRenderer.enabled = false;
 	}
-
-	public void hideArrow()
-	{
-		ArrowVisible = false;
-		renderer.enabled = false;
-	}
-
-
-	/// <summary>
-	///  check if Target's transform is visible, return true / false
-	/// </summary>
-	/// <returns><c>true</c>, if onscreen was ised, <c>false</c> otherwise.</returns>
-	/// <param name="">.</param>
-	bool isOnScreen(Transform t)
-	{
-		Vector3 currentCamPos;
-		Vector3 objPos;
-		// Rect r = camera.pixelRect;
-		//---------------------------------------------------------------------------------
-		// 2 - Check if the object is before, in or after the camera bounds
-		//---------------------------------------------------------------------------------
-		
-		// Camera borders
-		var dist = (transform.position - Camera.main.transform.position).z;
-		float leftBorder = Camera.main.ViewportToWorldPoint(new Vector3(0, 0, dist)).x;
-		float rightBorder = Camera.main.ViewportToWorldPoint(new Vector3(1, 0, dist)).x;
-		// float width = Mathf.Abs(rightBorder - leftBorder);
-
-		var topBorder = Camera.main.ViewportToWorldPoint(new Vector3(0, 0, dist)).y;
-		var bottomBorder = Camera.main.ViewportToWorldPoint(new Vector3(0, 1, dist)).y;
-		// float height = Mathf.Abs(topBorder - bottomBorder);
-		
-		// Determine entry and exit border using direction
-		Vector3 exitBorder = Vector3.zero;
-		Vector3 entryBorder = Vector3.zero;
-		
-		if (direction.x < 0)
-		{
-			exitBorder.x = leftBorder;
-			entryBorder.x = rightBorder;
-		}
-		else if (direction.x > 0)
-		{
-			exitBorder.x = rightBorder;
-			entryBorder.x = leftBorder;
-		}
-		
-		if (direction.y < 0)
-		{
-			exitBorder.y = bottomBorder;
-			entryBorder.y = topBorder;
-		}
-		else if (direction.y > 0)
-		{
-			exitBorder.y = topBorder;
-			entryBorder.y = bottomBorder;
-		}
-
-		currentCamPos = myCam.WorldToScreenPoint(myCam.transform.position);
-		objPos = myCam.WorldToScreenPoint(t.position);
-
-		if (objPos.x < (currentCamPos.x - (myCam.pixelWidth / 2)))
-		{
-			return false;
-		}
-		else if (objPos.x > (currentCamPos.x + (myCam.pixelWidth / 2)))
-		{
-			return false;
-		}
-
-		if (objPos.y < (currentCamPos.y - (myCam.pixelHeight / 2)))
-		{
-			return false;
-		}
-		else if (objPos.x > (currentCamPos.x + (myCam.pixelHeight / 2)))
-		{
-			return false;
-		}
-
-		return true;
-	}
-
+				
 	// use euler angles to calculate rotation angle
 	float GetTargetAngleMath(Transform t)
 	{
@@ -299,20 +223,19 @@ public class NavArrow : MonoBehaviour {
 		return rotation;
 	}
 
-	Quaternion GetTargetAngleQuat(Transform t)
+		Quaternion GetTargetAngleQuat(Transform target)
 	{
-		Vector3 relativePos = (t.transform.position - SelfTarget.transform.position);
-		// Quaternion rotation = Quaternion.LookRotation(relativePos, Vector3.back);
-		Quaternion rotation = Quaternion.LookRotation(Vector3.back, relativePos);
+		Vector3 relativePos = (target.transform.position - Owner.transform.position);
+				Quaternion rotation = Quaternion.LookRotation(relativePos, Vector3.back);
 
-		Debug.DrawRay(SelfTarget.transform.position, relativePos /2 , Color.grey);
+		Debug.DrawRay(Owner.transform.position, relativePos /2 , Color.grey);
 		return rotation; 
 	}
 
-	Quaternion LookAt(Transform t)
+		Quaternion LookAt(Transform target)
 	{
-		Vector3 relativePos = t.transform.position - SelfTarget.transform.position;
-		Quaternion rotation = Quaternion.LookRotation(Vector3.back, relativePos);
+		Vector3 relativePos = target.transform.position - Owner.transform.position;
+				Quaternion rotation = Quaternion.LookRotation(relativePos, Vector3.back);
 
 		Debug.DrawRay(transform.localPosition, relativePos /2 , Color.green);
 
@@ -328,5 +251,20 @@ public class NavArrow : MonoBehaviour {
 	{
 		Gizmos.color = Color.gray;
 		Gizmos.DrawWireSphere(transform.parent.transform.position, ArrowRadius);
+	}
+
+	/// <summary>
+	/// Uses the Camera_Controller to determine if transform is on screen
+	/// </summary>
+	/// <param name="tform">Tform.</param>
+		public bool isOnScreen(Transform tform)
+	{
+		if (_Camera_Controller == null)
+		{
+			// can't use camera controller so everything is on screen.
+			return true;
+		}
+
+		return _Camera_Controller.isOnScreen (tform);
 	}
 }

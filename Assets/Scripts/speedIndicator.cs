@@ -16,77 +16,100 @@ public class speedIndicator : MonoBehaviour {
 	public Vector2 copyVelocity;
 
 	private LineRenderer myLineRenderer;
-	private unit_controller myPlayerUnit;
-	private GameObject playerLink; // link to the player to reference rigidbody component
+	private GameObject Target = null;
+	private Rigidbody2D TargetRigidBody2D = null;
+	private unit_controller mTargetUnitControl = null;
 
 
 	// Use this for initialization
 	void Start () 
 	{
-		playerLink = GameObject.Find ("Player");
-		if (!playerLink) 
+		Target = GameObject.Find("Player_Unit");
+
+		if (!Target) 
 		{
-			Debug.Log(gameObject.name.ToString() + " : Player Object not found in scene!");
+			Debug.Log(gameObject.name.ToString() + " : Player not found in scene!");
 		}
 		else
 		{
 			// successfully added player link object
 		}
 
-		// connect and initialize LineRenderer Component
-		myLineRenderer = GetComponent<LineRenderer>();
+		RegisterRigidBody();
 
-		if (!myLineRenderer)
-		{
-			Debug.Log (gameObject.name.ToString() + " : Linerenderer component not found!");			      
-		}
-		else
-		{
-			myLineRenderer.SetVertexCount(lengthOfLineRenderer);
-			myLineRenderer.SetPosition(0, playerLink.transform.position);
-			myLineRenderer.SetPosition(1, playerLink.transform.position);
-			myLineRenderer.SetColors(c1, c2);
-			myLineRenderer.SetWidth(startWidth, endWidth);
+		RegisterLineRenderer ();
 
-		}
 
 		// Connect parent velocity limit from <unit_controller> (if any)
-		myPlayerUnit = GetComponent<unit_controller>();
-
-		if (!myPlayerUnit) 
+		if (mTargetUnitControl == null) 
 		{
-			Debug.Log(gameObject.name.ToString() + " : unit_controller not found!");
+			RegisterUnitControl();
 		}
-		else
+
+		if (mTargetUnitControl != null)
 		{
-			VelocityLimit = myPlayerUnit.maxVelocity;	
+			VelocityLimit = mTargetUnitControl.maxVelocity;	
 		}
 
 	}
+
+
+	/// <summary>
+	/// connect and initialize LineRenderer Component
+	/// </summary>
+	void RegisterLineRenderer ()
+	{
+		myLineRenderer = GetComponent<LineRenderer> ();
+		if (!myLineRenderer) {
+			Debug.Log (gameObject.name.ToString () + " : Linerenderer component not found!");
+		}
+		else {
+			myLineRenderer.positionCount = lengthOfLineRenderer;
+			myLineRenderer.SetPosition (0, transform.position);
+			myLineRenderer.SetPosition (1, Target.transform.position);
+			myLineRenderer.startColor = c1;
+			myLineRenderer.startColor = c2;
+			myLineRenderer.startWidth = startWidth;
+			myLineRenderer.endWidth = endWidth;
+		}
+	}
 	
 	// Update is called once per frame
-	void Update () {
-		// get velocity
-		// update line renderer end node to match velocity * velocity % indicator
-		// 0 = minimum radius
-		// 1 = maximum radius
+	void Update () 
+	{
+		if ((Target != null)&& (TargetRigidBody2D != null))
+		{
+			// update line renderer end node to match velocity * velocity % indicator
+			myLineRenderer.SetPosition(0, Target.transform.position);
 
-		myLineRenderer.SetPosition(0, playerLink.transform.position);
+			Vector2 targetVelocityPos = getVelocityHeading (TargetRigidBody2D.velocity).normalized;
 
-		copyVelocity = playerLink.rigidbody2D.velocity;
+			targetVelocityPos.x *= Mathf.Lerp(minRadius, maxRadius, (TargetRigidBody2D.velocity.x / VelocityLimit.x));
+			targetVelocityPos.y *= Mathf.Lerp(minRadius, maxRadius, (TargetRigidBody2D.velocity.y / VelocityLimit.y));
 
-		Vector2 targetVelocityPos = getVelocityHeading (playerLink.rigidbody2D.velocity).normalized;
-
-		targetVelocityPos.x *= Mathf.Lerp(minRadius, maxRadius, (playerLink.rigidbody2D.velocity.x / VelocityLimit.x));
-		targetVelocityPos.y *= Mathf.Lerp(minRadius, maxRadius, (playerLink.rigidbody2D.velocity.y / VelocityLimit.y));
-
-		myLineRenderer.SetPosition(1, playerLink.transform.position - (Vector3)targetVelocityPos);
+			myLineRenderer.SetPosition(1, Target.transform.position - (Vector3)targetVelocityPos);
+		}
 	}
 
 	Vector2 getVelocityHeading(Vector2 t)
 	{
-		Vector2 relativePos = (t - (Vector2)playerLink.transform.position);
+		Vector2 relativePos = (t - (Vector2)Target.transform.position);
 		return relativePos;
 	}
 
+	public void RegisterRigidBody()
+	{
+		if (Target != null)
+		{
+			TargetRigidBody2D = Target.GetComponent<Rigidbody2D>();
+		}
+	}
+
+	public void RegisterUnitControl()
+	{
+		if (Target != null)
+		{
+			mTargetUnitControl = Target.GetComponent<unit_controller>();
+		}
+	}
 }

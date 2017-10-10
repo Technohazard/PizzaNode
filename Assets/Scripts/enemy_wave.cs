@@ -2,21 +2,44 @@
 using System.Collections.Generic;
 
 public class enemy_wave : MonoBehaviour {
+	
+		/// <summary>
+		/// Display name of this wave.
+		/// </summary>
+	public string waveName;
+	
+		/// <summary>
+		/// The index of this wave as assigned by a wave spawner.
+		/// </summary>
+		public int assignedIndex = 0; 
+	public enum WaveTypes{
+							GameObjects,
+							TotallyRandom, 
+							StrongestFirst, 
+							Ring
+							}; 
+		// GameObjects: Hides GO's on start, Activates child gameObjects on spawn.
 
-	public string waveName; // Name of this wave
-
-	public enum WaveTypes{totally_random, strongest_first, ring}; 
-	public bool DestroyOnComplete = false; // If all enemies from this wave die, destroy the game object.
-	public WaveTypes wave_type = WaveTypes.totally_random; // soon: "strongest_first";
+	public WaveTypes wave_type = WaveTypes.TotallyRandom;
 	public float RingRadius = 4.0f;
 	public Vector3 original_offset;
 
-	public bool waveSpawnOnStart = false;
+	/// <summary>
+	/// If all enemies from this wave die, destroy the game object.
+	/// </summary>
+	public bool DestroyOnComplete = false;
 	public int MaxSpawnCounter = 3; // how many times this wave can spawn before running out of dudes.
 	private int spawnCounter; // how many times has this wave spawned?
-
-	public GameObject Target; // Spawned objects will start with a target of this Target. Usually the Player
-	public float mNavMinDistance = 2.0f; // distance at which the arrow stops nav'ing to point to the center of the wave
+	
+	/// <summary>
+	/// Spawned objects will start with a target of this Target. Usually the Player
+	/// </summary>
+	public GameObject Target;
+	
+	/// <summary>
+	/// distance at which the arrow stops nav'ing to point to the center of the wave
+	/// </summary>
+	public float mNavMinDistance = 2.0f; 
 
 	// State machine for wave control
 	// inactive = default state, not yet ready to spawn d00ds
@@ -24,11 +47,11 @@ public class enemy_wave : MonoBehaviour {
 	// control = make dudes fly around, attack waves
 	// paused = like control but nothing moves
 	// dead = all dudes have been killed
-	public enum waveStates {inactive, spawn, control, paused, dead}
-	public waveStates state = waveStates.inactive;
+	public enum WaveStates {Inactive, Spawn, Control, Paused, Dead}
+	public WaveStates State = WaveStates.Inactive;
 
-	public GameObject[] enemy_prefab_array; // array of prefab links
-	public List<GameObject> enemy_prefabs; // fill this with prefabs from the array to use for making this wave
+	public GameObject[] EnemyPrefabArray; // array of prefab links
+	public List<GameObject> EnemyPrefabList; // fill this with prefabs from the array to use for making this wave
 
 	public List<GameObject> enemies; // Master list of spawned enemies
 
@@ -54,18 +77,23 @@ public class enemy_wave : MonoBehaviour {
 	// Use this for initialization
 	void Start () 
 	{
-		foreach (GameObject pf in enemy_prefab_array)
+		if (wave_type == WaveTypes.GameObjects)
 		{
-			enemy_prefabs.Add(pf);
+				ScanChildren ();
 		}
 
-		if (enemy_prefabs.Count < 1)
+		foreach (GameObject pf in EnemyPrefabArray)
+		{
+			EnemyPrefabList.Add(pf);
+		}
+
+		if (EnemyPrefabList.Count < 1)
 		{
 			// Need at least one prefab element.
 			Debug.Log (gameObject.name.ToString() + ": No Enemy Prefab List Found for Wave.");
 
 			// put state into Inactive for now.
-			state = waveStates.inactive;
+			State = WaveStates.Inactive;
 			// loadWave();
 		};
 
@@ -101,9 +129,9 @@ public class enemy_wave : MonoBehaviour {
 		spawnCounter = MaxSpawnCounter;
 	}
 	
-	void triggerSpawn()
+	public void triggerSpawn()
 	{
-		state = waveStates.spawn;
+		State = WaveStates.Spawn;
 	}
 
 	void spawn()
@@ -113,44 +141,38 @@ public class enemy_wave : MonoBehaviour {
 		{
 			switch(wave_type)
 			{
-				case  WaveTypes.totally_random:
+				case  WaveTypes.TotallyRandom:
 				{
 					// Generate a wave of enemiex, size (x, y)
-					generate_wave((int)group_size.x, (int)group_size.y);
-				// add a nav arrow pointing to this enemy's center
+					GenerateWave((int)group_size.x, (int)group_size.y);
 
-				GameObject fakeArrow = Resources.Load<GameObject>("Prefabs/NavArrow_Enemy");
-				if (fakeArrow != null)
-				{
-					GameObject goArrow = (GameObject)GameObject.Instantiate(fakeArrow);
-
-					if (goArrow != null)
-					{
-						goArrow.transform.parent = GameObject.FindGameObjectWithTag("Player").transform;
-						NavArrow naControl = goArrow.GetComponent<NavArrow>();
-						if (naControl)
-						{
-							naControl.SetTarget(gameObject);
-						}
-						
-					}
-				}
+										CreateNavArrow (gameObject);
 
 
 					break;
 				}
-				case WaveTypes.strongest_first:
+				case WaveTypes.StrongestFirst:
 				{
 					// Generate a wave of enemiex, size (x, y)
-					generate_wave((int)group_size.x, (int)group_size.y);
+					GenerateWave((int)group_size.x, (int)group_size.y);
 					break;
 				}
-				case WaveTypes.ring:
+				case WaveTypes.Ring:
 				{
 					// Generate a wave of enemiex, size (x, y)
 					GenerateRingWave((int)group_size.x, RingRadius);
 					break;
 				}
+				case WaveTypes.GameObjects:
+				{
+					// Activate all child gameobjects.
+					Debug.Log(string.Format ("Spawning {0} enemies from GameObject", enemies.Count));
+					foreach (GameObject obj in enemies) 
+					{
+						obj.SetActive (true);
+					}
+				}
+				break;
 			}
 
 			spawnCounter--; // can't spawn infinitely.
@@ -161,7 +183,34 @@ public class enemy_wave : MonoBehaviour {
 		}
 	}
 
-	void generate_wave(int size_x, int size_y)
+	/// <summary>
+	/// add a nav arrow pointing to the wave gameObject
+	/// </summary>
+	private void CreateNavArrow (GameObject obj)
+	{
+		GameObject fakeArrow = Resources.Load<GameObject> ("Prefabs/NavArrow_Enemy");
+
+		if (fakeArrow != null) 
+		{
+			GameObject goArrow = (GameObject)GameObject.Instantiate (fakeArrow);
+			if (goArrow != null) 
+			{
+				goArrow.transform.parent = GameObject.FindGameObjectWithTag ("Player").transform;
+				NavArrow naControl = goArrow.GetComponent<NavArrow> ();
+				if (naControl) 
+				{
+					naControl.SetTarget (gameObject);
+				}
+			}
+		}
+	}		
+
+		/// <summary>
+		/// Spawn a group of enemy prefabs in a group of size X, Y
+		/// </summary>
+		/// <param name="size_x">Size x.</param>
+		/// <param name="size_y">Size y.</param>
+	private void GenerateWave(int size_x, int size_y)
 	{
 		for (int yl = 0; yl <= size_y; yl++)
 		{
@@ -174,7 +223,12 @@ public class enemy_wave : MonoBehaviour {
 			}
 		}
 	}
-
+	
+	/// <summary>
+	/// Spawn <paramref name="numDudes/>/ enemies in a ring of <paramref name="radius"/>
+	/// </summary>
+	/// <param name="numDudes">Number dudes.</param>
+	/// <param name="radius">Radius.</param>
 	void GenerateRingWave(int numDudes, float radius)
 	{
 		// float rotation = 0.0f; // starting rotation for spawning dudes
@@ -236,19 +290,19 @@ public class enemy_wave : MonoBehaviour {
 		GameObject temp_spawn_prefab = new GameObject();
 
 		prefab_index = calculate_enemy_for(xp, yp);
-		max_prefabs = enemy_prefabs.Count;
+		max_prefabs = EnemyPrefabList.Count;
 
 		if (prefab_index < max_prefabs)
 		{
-			clone = enemy_prefabs[prefab_index];
+			clone = EnemyPrefabList[prefab_index];
+			temp_spawn_prefab = (GameObject)Instantiate(clone, gameObject.transform.position, Quaternion.identity);
 
-			if (wave_type == WaveTypes.totally_random) 
+			if (wave_type == WaveTypes.TotallyRandom) 
 			{
-				temp_spawn_prefab = (GameObject)Instantiate(clone, gameObject.transform.position, Quaternion.identity);
 				temp_spawn_prefab.transform.parent = gameObject.transform;
 				temp_spawn_prefab.transform.Translate(new Vector3(xp * grid_spacing.x, yp * grid_spacing.y,0), Space.Self);			
 			}
-			else if ((wave_type == WaveTypes.strongest_first))
+			else if ((wave_type == WaveTypes.StrongestFirst))
 			{
 				// test of new spawn formula, tries to instantiate at the right location, instead of a 2-step translate process
 				Vector3 to_translate = transform.position + new Vector3(xp * grid_spacing.x, yp * grid_spacing.y,0);
@@ -256,7 +310,7 @@ public class enemy_wave : MonoBehaviour {
 				temp_spawn_prefab.transform.parent = gameObject.transform;
 			}
 
-			else if (wave_type == WaveTypes.ring)
+			else if (wave_type == WaveTypes.Ring)
 			{
 				// still using old style location spawning. needs to be lerped around a ring!
 				temp_spawn_prefab = (GameObject)Instantiate(clone, gameObject.transform.position, Quaternion.identity);
@@ -287,9 +341,9 @@ public class enemy_wave : MonoBehaviour {
 		int result = 0; // returns 1st enemy if nothing changes
 		int num_prefabs = 0;
 
-		if (enemy_prefabs != null)
+		if (EnemyPrefabList != null)
 		{ 
-			num_prefabs = enemy_prefabs.Count;
+			num_prefabs = EnemyPrefabList.Count;
 		}
 		else
 		{
@@ -299,12 +353,12 @@ public class enemy_wave : MonoBehaviour {
 
 		switch (wave_type)
 		{
-			case WaveTypes.totally_random:
+			case WaveTypes.TotallyRandom:
 			{
 				result = (int)(Random.value * num_prefabs);
 				break;
 			}
-			case WaveTypes.strongest_first:
+			case WaveTypes.StrongestFirst:
 			{
 				if (y == group_size.y)
 				{
@@ -323,7 +377,7 @@ public class enemy_wave : MonoBehaviour {
 				break;
 			}
 
-			case WaveTypes.ring:
+			case WaveTypes.Ring:
 			{
 				// deploys enemies from list in a repeating, circular pattern
 				if ((ring_index < num_prefabs) && (ring_index >= 0))
@@ -344,23 +398,23 @@ public class enemy_wave : MonoBehaviour {
 
 	// Update is called once per frame
 	void Update () {
-		switch (state)
+		switch (State)
 		{
-			case waveStates.inactive:
+			case WaveStates.Inactive:
 			{
 				// zzzz
 				break;
 			}
-			case waveStates.spawn:
+			case WaveStates.Spawn:
 			{
 				// spawn dudes
 				spawn();
 
 				// move immediately to control state so we don't multi-spawn
-				state = waveStates.control;
+				State = WaveStates.Control;
 				break;
 			}
-			case waveStates.control:
+			case WaveStates.Control:
 			{
 				// not much here yet
 				// in the future - talk to pilot AI, issue orders, etc.
@@ -383,22 +437,22 @@ public class enemy_wave : MonoBehaviour {
 					// otherwise destroy the gameobject and be dead! 
 					if (spawnCounter > 0)
 					{ 
-						state = waveStates.spawn; // don't forget, this automatically decrements SpawnCounter for us, so we don't have to.
+						State = WaveStates.Spawn; // don't forget, this automatically decrements SpawnCounter for us, so we don't have to.
 					}
 					else
 					{
-					    state = waveStates.dead;
+					    State = WaveStates.Dead;
 					}
 				}
 
 				break;
 			}
-			case waveStates.paused:
+			case WaveStates.Paused:
 			{
 				// zzzz here also
 				break;
 			}
-			case waveStates.dead:
+			case WaveStates.Dead:
 			{
 				if (DestroyOnComplete)
 				{	Debug.Log (gameObject.name.ToString() + ": Self Destructing in 5.0!");
@@ -457,8 +511,8 @@ public class enemy_wave : MonoBehaviour {
 		
 		foreach (GameObject part in assembly)
 		{
-			CoM += part.rigidbody.worldCenterOfMass * part.rigidbody.mass;
-			c += part.rigidbody.mass;
+			CoM += part.GetComponent<Rigidbody>().worldCenterOfMass * part.GetComponent<Rigidbody>().mass;
+			c += part.GetComponent<Rigidbody>().mass;
 		}
 		
 		CoM /= c;
@@ -488,24 +542,24 @@ public class enemy_wave : MonoBehaviour {
 	{
 		Debug.Log (gameObject.name.ToString() + ": Loading Default Prefabs.");
 
-		if (enemy_prefabs.Count <= 0)
+		if (EnemyPrefabList.Count <= 0)
 		{
 			GameObject temp_enemy = Resources.Load<GameObject>("Tyrian_Carrot_trans_0");
-			enemy_prefabs.Add(temp_enemy);
+			EnemyPrefabList.Add(temp_enemy);
 			Debug.Log ("Added Default Prefab: " + temp_enemy.name.ToString());
 
 			temp_enemy = Resources.Load<GameObject>("Tyrian_Carrot_trans_1");
-			enemy_prefabs.Add(temp_enemy);
+			EnemyPrefabList.Add(temp_enemy);
 			Debug.Log ("Added Default Prefab: " + temp_enemy.name.ToString());
 		}
 		else
 		{
-			Debug.Log ("enemy prefab list length: " + enemy_prefabs.Count.ToString());
+			Debug.Log ("enemy prefab list length: " + EnemyPrefabList.Count.ToString());
 		}
 
-		int num_prefabs = enemy_prefabs.Count;
+		int num_prefabs = EnemyPrefabList.Count;
 		Debug.Log (gameObject.name.ToString() + "DEFAULTS LOADED: new Num Prefabs: " + num_prefabs.ToString());
-		foreach (GameObject go in enemy_prefabs)
+		foreach (GameObject go in EnemyPrefabList)
 		{
 			Debug.Log ("EP+: " + go.name.ToString ());
 		}
@@ -521,7 +575,7 @@ public class enemy_wave : MonoBehaviour {
 	
 		// reset spawn counter to max spawn counter
 		spawnCounter = MaxSpawnCounter;
-		state = waveStates.paused;
+		State = WaveStates.Paused;
 	}
 
 	void ClearWave()
@@ -544,4 +598,27 @@ public class enemy_wave : MonoBehaviour {
 	{
 		return mNavMinDistance;
 	}
+
+		/// <summary>
+		/// Scan all child objects for enemies, add them to enemy array, and deactivate
+		/// Used by "GameObjects" waves
+		/// </summary>
+		public void ScanChildren()
+		{
+				foreach (Transform tform in transform)
+				{
+						if (tform.CompareTag ("Enemy"))
+						{
+								Debug.Log ("Adding child " + tform.name.ToString ());
+								addEnemy (transform.gameObject);
+								transform.gameObject.SetActive (false);
+						}
+						else
+						{
+								Debug.Log ("child {0} not an enemy" + tform.name.ToString ());
+						}
+				}
+
+				Debug.Log (string.Format ("Child Enemy Scan Count: {0}", enemies.Count));
+		}
 }
